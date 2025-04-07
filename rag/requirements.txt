@@ -1,9 +1,0 @@
-fastapi>=0.95.0
-uvicorn>=0.21.0
-openai>=0.28.0
-biopython>=1.80
-sentence-transformers>=2.2.0
-beautifulsoup4>=4.12.0
-pyngrok>=6.0.0
-nest-asyncio>=1.5.0
-python-multipart>=0.0.5
