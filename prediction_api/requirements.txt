@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+torch
+nibabel
+numpy
+joblib
+torchvision
