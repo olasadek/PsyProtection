@@ -9,6 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.compose import ColumnTransformer
+from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder 
 import os
 #%%
 class TestPipeline(unittest.TestCase):
@@ -68,6 +69,7 @@ class TestPipeline(unittest.TestCase):
         print("✓ Features properly scaled (mean≈0, std≈1)")
         
         print(" All numeric transformation tests passed!")
+        return transformed
 
     def test_categorical_imputation(self):
         """Test categorical transformer pipeline"""
@@ -88,6 +90,7 @@ class TestPipeline(unittest.TestCase):
         print("✓ Output is integer type as expected")
         
         print(" All categorical transformation tests passed!")
+        return transformed
 
     def test_mri_transformation(self):
         """Test MRI data transformation pipeline"""
@@ -121,9 +124,83 @@ class TestPipeline(unittest.TestCase):
             print(f"✓ transformed to shape: {transformed.shape}")
             
             print("All MRI transformation tests passed!")
+            return transformed
             
         except Exception as e:
             self.fail(f"MRI transformation failed: {str(e)}")
+    # Integration Tests   
+    def test_vit_output_shape(self):
+        """Test output shape of ViTImageEncoder using transformed MRI"""
+        print("\nRunning ViT output shape test...")
+
+        try:
+           image = self.test_mri_transformation()
+           if image is None:
+            self.skipTest("MRI transformation did not return an image.")
+
+           model = ViTImageEncoder()
+           output = model(image.unsqueeze(0))  # Add batch dimension
+           self.assertEqual(output.shape, (1, 768))
+           print("✓ ViTImageEncoder output shape correct for batch size 1")
+
+        except Exception as e:
+           self.fail(f"ViT output shape test failed: {str(e)}")
+    
+    def test_ehr_output_shape(self):
+       """Test output shape of EHRFeatureEncoder using dummy EHR input"""
+       print("\nRunning EHRFeatureEncoder output shape test...")
+
+       try:
+           numeric_data = self.test_numeric_imputation()
+           categorical_data = self.test_categorical_imputation()
+           # Combine along feature dimension (dim=1)
+           ehr_data = torch.cat([numeric_data, categorical_data], dim=1)
+
+           model = EHRFeatureEncoder(input_dim=16)
+           output = model(ehr_data)  # Pass EHR data to the model
+           # Check output shape
+
+           self.assertEqual(output.shape, (1, 50))
+           print("✓ EHRFeatureEncoder output shape correct for batch size 1")
+
+       except Exception as e:
+          self.fail(f"EHR output shape test failed: {str(e)}")
+
+    def test_multimodal_diagnostic_net(self):
+       """Test MultiModalDiagnosticNet end-to-end with dummy MRI and EHR input."""
+       try:
+           print("\nRunning MultiModalDiagnosticNet integration test...")
+
+           # Prepare MRI image
+           mri_image = self.test_mri_transformation()  # shape: (1, 224, 224)
+           mri_image = mri_image.unsqueeze(0)  # Add batch dimension -> (1, 1, 224, 224)
+
+           # Prepare EHR data
+           numeric_data = self.test_numeric_imputation()  # (N, num_features)
+           categorical_data = self.test_categorical_imputation()  # (N, cat_features)
+        
+           ehr_data_np = np.concatenate([numeric_data, categorical_data], axis=1)
+           ehr_data = torch.tensor(ehr_data_np, dtype=torch.float32)
+           ehr_data = ehr_data[:1]  # Ensure batch size is 1
+
+           # Model init
+           ehr_input_dim = ehr_data.shape[1]
+           model = MultiModalDiagnosticNet(ehr_input_dim=ehr_input_dim)
+
+           # Forward pass
+           output = model(mri_image, ehr_data)
+
+           # Assertions
+           self.assertEqual(output.shape, (1, 1))
+           self.assertGreaterEqual(output.item(), 0.0)
+           self.assertLessEqual(output.item(), 1.0)
+           print("✓ MultiModalDiagnosticNet output shape correct and within [0, 1]")
+   
+           print("All MultiModalDiagnosticNet integration tests passed!")
+
+       except Exception as e:
+           self.fail(f"MultiModalDiagnosticNet test failed: {str(e)}")
+           
 if __name__ == '__main__':
     print("Starting test suite...")
     unittest.main(argv=['first-arg-is-ignored'], exit=False)
