@@ -1,0 +1,11 @@
+train_multimodal_model.py
+__pycache__/
+*.ipynb
+*.nii.gz
+*.csv
+*.pt
+*.ckpt
+data/
+notebooks/
+checkpoints/
+*.git
