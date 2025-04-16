@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 from utils.fetch import fetch_all
 from utils.rank import rank_articles
