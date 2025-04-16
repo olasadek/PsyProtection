@@ -49,4 +49,4 @@ if __name__ == "__main__":
         print("[🔁] Running prediction cycle...")
         run_predictions()
         print("[⏳] Sleeping for 12 hours...\n")
-        time.sleep(43200)  # 12 hours
+        time.sleep(86400)  
