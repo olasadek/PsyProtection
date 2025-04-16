@@ -1,15 +1,9 @@
-#%%
-# ====================== 0. Import Libraries ======================
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 
-#%%
-# ====================== 1. Define Networks ======================
-
 class ViTImageEncoder(nn.Module):
-    """Vision Transformer (ViT) for extracting features from grayscale MRI images."""
     def __init__(self):
         super(ViTImageEncoder, self).__init__()
         vit = models.vit_b_16(pretrained=True)
@@ -25,7 +19,6 @@ class ViTImageEncoder(nn.Module):
 
 
 class EHRFeatureEncoder(nn.Module):
-    """Simple feedforward network for extracting features from EHR (tabular) data."""
     def __init__(self, input_dim):
         super(EHRFeatureEncoder, self).__init__()
         self.fc1 = nn.Linear(input_dim, 100)
@@ -38,7 +31,6 @@ class EHRFeatureEncoder(nn.Module):
 
 
 class MultiModalDiagnosticNet(nn.Module):
-    """Model that fuses image and EHR features for binary classification."""
     def __init__(self, ehr_input_dim):
         super(MultiModalDiagnosticNet, self).__init__()
         self.image_encoder = ViTImageEncoder()
