@@ -11,6 +11,12 @@ def run_predictions():
         folder_path = os.path.join(DATA_DIR, folder)
         mri_path = os.path.join(folder_path, "mri.nii.gz")
         ehr_path = os.path.join(folder_path, "ehr.json")
+        verdict_path = os.path.join(folder_path, "verdict.json")
+
+        # 🔁 Skip folders already processed
+        if os.path.exists(verdict_path):
+            print(f"[⏭️] Skipping {folder}, already processed.")
+            continue
 
         if not os.path.exists(mri_path) or not os.path.exists(ehr_path):
             print(f"[!] Missing MRI or EHR file for {folder}")
@@ -31,8 +37,8 @@ def run_predictions():
             result = response.json()
             print(f"[✓] Prediction for {folder}: {result}")
 
-            # Optionally save result
-            with open(os.path.join(folder_path, "verdict.json"), 'w') as f:
+            # ✅ Save result to skip next time
+            with open(verdict_path, 'w') as f:
                 json.dump(result, f, indent=4)
 
         except Exception as e:
