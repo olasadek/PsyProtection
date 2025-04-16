@@ -1,4 +1,3 @@
-#%%
 from flask import Flask, request, jsonify
 import torch
 import pandas as pd
@@ -11,7 +10,6 @@ from ast import literal_eval
 import joblib
 import json
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder 
-#%%
 
 app = Flask(__name__)
 # Load the trained model, encoder and the decoder (this assumes the model file is in the same directory as the script)
@@ -23,7 +21,7 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Resize((224, 224)),
 ])
-#%%
+
 @app.route('/drug_abuse_detector', methods=['POST'])
 def drug_abuse_detector():
     try:
@@ -79,4 +77,3 @@ def home():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-# %%
