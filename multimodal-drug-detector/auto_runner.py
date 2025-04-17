@@ -4,7 +4,7 @@ import requests
 import json
 
 API_URL = "http://127.0.0.1:5000/drug_abuse_detector"  # Adjust if running remotely
-DATA_DIR = "data_to_predict"  # Folder structure: data_to_predict/patient123/{mri.nii.gz, ehr.json}
+DATA_DIR = "data_to_predict"  # Folder structure: data_to_predict/patient123/{mri.nii, ehr.json}
 
 def run_predictions():
     for folder in os.listdir(DATA_DIR):
