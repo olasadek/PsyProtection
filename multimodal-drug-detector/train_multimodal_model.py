@@ -220,29 +220,10 @@ train_dataloader  = DataLoader(dataset=train_dataset, batch_size=8, shuffle=True
 test_dataset = TensorDataset(images_test,X_test1,y_test1)
 test_dataloader  = DataLoader(dataset=test_dataset, batch_size=8, shuffle=True)
 
-"""To train a robust multi-model for this task, we implemented a combined architecture consisting of two distinct networks:
-
-
-1.   **Vits-based feature extractor**: This model processes MRI images and extracts 768 high-level features that encapsulate relevant spatial and structural information.
-2.   **Neural network for EHR data** : A separate neural network is designed to extract 50 informative features from Electronic Health Records (EHR), ensuring that patient metadata contributes meaningfully to the final prediction
-
-Both feature sets are **concatenated and used as input** to the final predictive layer. The training process was structured as follows:
 
 
 
-*  The combined model was trained using the **train and test data loaders**, ensuring efficient mini-batch processing
-*   **Binary Cross Entropy Loss** (BCELoss) was used as the criterion for optimization.
-
-*  The **Adam optimizer** with weight decay was applied to fine-tune model parameters.
-*   The **best validation loss** was tracked, and the optimal model state was saved.
-
-*   The finalized model, incorporating stacked features from both sources, was stored  for future predictions.
-
-# Train and Test the Model
-"""
-
-
-# ====================== 1. Training & Validation ======================
+# 1.Training & Validation 
 
 def calculate_accuracy(outputs, labels):
     preds = (outputs > 0.5).float()
