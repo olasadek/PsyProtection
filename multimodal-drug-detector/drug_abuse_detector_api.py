@@ -9,15 +9,14 @@ import torchvision.transforms as transforms
 import joblib
 import json
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
+import requests
 
 app = Flask(__name__)
 
-# Load model and encoders
 model = joblib.load("multi_modal_diagnostic_model.pkl")
 scaler = joblib.load("scaler.pkl")
 encoder = joblib.load("encoder.pkl")
 
-# Image transform
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Resize((224, 224)),
@@ -42,6 +41,8 @@ FRIENDLY_TO_MODEL_KEYS = {
     "current illness": "illness",
     "current medication": "medication"
 }
+
+
 
 @app.route('/drug_abuse_detector', methods=['POST'])
 def drug_abuse_detector():
@@ -69,6 +70,7 @@ def drug_abuse_detector():
         ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
         ehr_df[categorical_cols] = encoder.transform(ehr_df[categorical_cols])
         ehr_tensor = torch.from_numpy(ehr_df.values).float()
+        
         with torch.no_grad():
             predictions = model(mri_data, ehr_tensor)
             predicted_prob = predictions.item()
@@ -87,12 +89,21 @@ def drug_abuse_detector():
             else:
                 suggested_query = None  # If there's no illness or medication, no suggested query
 
+        query_answer = None
+        if suggested_query:
+            # Send the suggested query to the service on port 8000
+            response = requests.post("http://127.0.0.1:8000/ask_question", json={"query": suggested_query})
+            if response.status_code == 200:
+                query_answer = response.json().get("answer", "No answer found.")
+            else:
+                query_answer = "Error retrieving the answer from query service."
+
         return jsonify({
             "prediction": {
                 "probability": float(predicted_prob),
                 "description": verdict
             },
-            "suggested_query": suggested_query
+            "query_answer": query_answer
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
