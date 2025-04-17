@@ -46,7 +46,6 @@ FRIENDLY_TO_MODEL_KEYS = {
 @app.route('/drug_abuse_detector', methods=['POST'])
 def drug_abuse_detector():
     try:
-        # --- 1. Handle MRI file upload ---
         file = request.files['file']
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
             file.save(temp_file.name)
@@ -59,7 +58,6 @@ def drug_abuse_detector():
         ehr_raw = request.form.get('EHR_features')
         ehr_dict = json.loads(ehr_raw)
 
-        # Convert friendly keys to model keys if needed
         ehr_model_ready = {
             FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()
         }
@@ -79,16 +77,23 @@ def drug_abuse_detector():
         verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
         ehr_dict["Verdict"] = verdict
 
+         # After verdict logic
+        suggested_query = None
+        if predicted_class == 1:
+            illness = ehr_dict.get("illness", "")
+            medication = ehr_dict.get("medication", "")
+            if illness and medication:
+                suggested_query = f"newest treatments for {medication} addiction for {illness} patients"
+            else:
+                suggested_query = None  # If there's no illness or medication, no suggested query
+
         return jsonify({
             "prediction": {
                 "probability": float(predicted_prob),
-                "is_drug_abuser": bool(predicted_class),
-                "class": int(predicted_class),
                 "description": verdict
             },
-            "submitted_data_with_verdict": ehr_dict
+            "suggested_query": suggested_query
         })
-
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
