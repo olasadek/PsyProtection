@@ -1,11 +1,3 @@
-# Load the dataset from S3 (Cloud Storage)
-# Recommended: Use Google Colab for handling large datasets
-# Install AWS CLI if not already installed:
-# pip install awscli
-# Sync the dataset from OpenNeuro S3 bucket (public access, no credentials needed):
-# aws s3 sync --no-sign-request s3://openneuro.org/ds003346 ds003346-download/
-#%%
-# Import necessary libraries
 import nibabel as nib
 import numpy as np
 import pandas as pd
