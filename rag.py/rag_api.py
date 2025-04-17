@@ -5,34 +5,35 @@ from utils.augment import augment_question
 from utils.answer import generate_answer
 import json
 import asyncio
+from tinydb import TinyDB, Query as TinyQuery
+db = TinyDB("query_cache.json")
+
 
 app = Flask(__name__)
 
 @app.route('/ask_question', methods=['POST'])
 def ask_question():
     data = request.get_json()
-    query_request = QueryRequest(query=data.get('query'))
+    query = data.get("query")
 
-    query = query_request.query
+    QueryEntry = TinyQuery()
+    cached_entry = db.get(QueryEntry.query == query)
+
+    if cached_entry:
+        return jsonify({"answer": cached_entry["answer"]})
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     all_articles = loop.run_until_complete(fetch_all(query))
-
     ranked_articles = rank_articles(query, all_articles)
 
-    ranked_articles_path = "ranked_articles.json"
-    with open(ranked_articles_path, "w") as f:
-        json.dump(ranked_articles, f)
+    augmented_question = augment_question(query, ranked_articles)
+    answer = generate_answer(augmented_question, ranked_articles)
 
-    with open(ranked_articles_path, "r") as f:
-        loaded_articles = json.load(f)
+    db.insert({"query": query, "answer": answer})
 
-    augmented_question = augment_question(query, loaded_articles)
-    answer = generate_answer(augmented_question, loaded_articles)
+    return jsonify({"answer": answer})
 
-    return jsonify({
-        "answer": answer
-    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
