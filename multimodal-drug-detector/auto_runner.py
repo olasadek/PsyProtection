@@ -1,10 +1,12 @@
-import time
 import os
 import requests
 import json
+import time
 
-API_URL = "http://127.0.0.1:5000/drug_abuse_detector"  # Adjust if running remotely
-DATA_DIR = "data_to_predict"  # Folder structure: data_to_predict/patient123/{mri.nii, ehr.json}
+API_URL = "http://127.0.0.1:5000/drug_abuse_detector"
+RAG_URL = "http://127.0.0.1:8000/ask_question"
+DATA_DIR = r"C:\Users\Dell\Downloads\predictions\data_to_predict"
+WAIT_ENABLED = True  # Set to False to skip the 12-hour wait during testing
 
 def run_predictions():
     for folder in os.listdir(DATA_DIR):
@@ -13,7 +15,6 @@ def run_predictions():
         ehr_path = os.path.join(folder_path, "ehr.json")
         verdict_path = os.path.join(folder_path, "verdict.json")
 
-        # 🔁 Skip folders already processed
         if os.path.exists(verdict_path):
             print(f"[⏭️] Skipping {folder}, already processed.")
             continue
@@ -37,7 +38,27 @@ def run_predictions():
             result = response.json()
             print(f"[✓] Prediction for {folder}: {result}")
 
-            # ✅ Save result to skip next time
+            predicted_class = result["prediction"].get("class", 0)
+
+            if predicted_class == 1:
+                medication = ehr_data.get("medication", "psychiatric medication")
+                illness = ehr_data.get("illness", "mental illness")
+                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
+                print(f"[🔎] Suggested RAG query: {rag_query}")
+                result["prediction"]["suggested_query"] = rag_query
+
+                try:
+                    rag_response = requests.post(RAG_URL, json={"query": rag_query})
+                    rag_answer = rag_response.json().get("answer", "No answer returned.")
+                    print(f"[📚] RAG answer: {rag_answer}")
+                    result["prediction"]["rag_answer"] = rag_answer
+                except Exception as e:
+                    print(f"[X] Error calling RAG: {e}")
+                    result["prediction"]["rag_answer"] = "Error retrieving RAG answer."
+
+            else:
+                print("✅ Patient looks good (not a drug abuser).")
+
             with open(verdict_path, 'w') as f:
                 json.dump(result, f, indent=4)
 
@@ -48,5 +69,7 @@ if __name__ == "__main__":
     while True:
         print("[🔁] Running prediction cycle...")
         run_predictions()
-        print("[⏳] Sleeping for 12 hours...\n")
-        time.sleep(86400)  
+        print("✅ All patients processed.")
+        if WAIT_ENABLED:
+            print("[⏳] Waiting 12 hours before next batch...\n")
+            time.sleep(10)  # 10 seconds
