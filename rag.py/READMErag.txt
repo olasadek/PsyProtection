@@ -1,4 +1,4 @@
-# 🧠 PsyProtection RAG Research Retrieval System
+🧠 PsyProtection RAG Research Retrieval System
 
 This is an intelligent research retrieval system tailored for psychiatric and drug abuse treatment support. It automatically searches PubMed Central and ArXiv, ranks articles with SBERT embeddings, augments clinician queries with OpenAI, and returns treatment recommendations—caching answers for repeated use.
 
