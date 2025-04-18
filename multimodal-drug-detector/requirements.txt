@@ -1,9 +1,9 @@
-Flask
-nibabel
 numpy==1.26.4
-joblib
-pandas
-scikit-learn
+pandas==2.2.3
+scikit-learn==1.6.1
+nibabel==5.3.2
+joblib==1.4.2
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.2.0+cpu
 torchvision==0.17.0+cpu
+flask==3.1.0
