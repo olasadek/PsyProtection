@@ -71,5 +71,5 @@ if __name__ == "__main__":
         run_predictions()
         print("✅ All patients processed.")
         if WAIT_ENABLED:
-            print("[⏳] Waiting 12 hours before next batch...\n")
-            time.sleep(10)  # 10 seconds
+            print("[⏳] Waiting 24 hours before next batch...\n")
+            time.sleep(86400)  # if you want to test it quickly, put it on 10 seconds 
