@@ -1,0 +1,52 @@
+#version: '3'
+networks:
+  api-network:
+    driver: bridge
+
+services:
+  multimodal-rag-api:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./multimodal-rag-api
+      dockerfile: Dockerfile
+    command: python app.py
+    ports:
+      - "8000:8000"
+    networks:
+      - api-network
+    environment:
+      - PORT=8000
+      - drug_abuse_detector_URL=http://host.docker.internal:8001/drug_abuse_detector
+      - RAG_URL=http://host.docker.internal:8002//ask_question
+
+  multimodal-drug-abuse-detector-api:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./multimodal-drug-detector
+      dockerfile: Dockerfile
+    command: python drug_abuse_detector_api.py
+    ports:
+      - "8001:8001"
+    networks:
+      - api-network
+    environment:
+      - PORT=8001
+
+  RAG-api:
+    stdin_open: true
+    tty: true
+    build:
+      context: ./rag.py
+      dockerfile: Dockerfile
+    command: python rag_api.py
+    ports:
+      - "8002:8002"
+    networks:
+      - api-network
+    environment:
+      - PORT=8002
+
+  
+

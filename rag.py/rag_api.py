@@ -5,6 +5,7 @@ from utils.augment import augment_question
 from utils.answer import generate_answer
 import json
 import asyncio
+import os
 from tinydb import TinyDB, Query as TinyQuery
 db = TinyDB("query_cache.json")
 
@@ -36,4 +37,4 @@ def ask_question():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host="0.0.0.0", port=os.getenv("PORT"))

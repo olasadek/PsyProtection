@@ -5,7 +5,6 @@ import nibabel as nib
 from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 import numpy as np
 import tempfile
-import os
 import torchvision.transforms as transforms
 import joblib
 import json
@@ -82,11 +81,31 @@ def drug_abuse_detector():
         verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
         ehr_dict["Verdict"] = verdict
 
+         # After verdict logic
+        suggested_query = None
+        if predicted_class == 1:
+            illness = ehr_dict.get("illness", "")
+            medication = ehr_dict.get("medication", "")
+            if illness and medication:
+                suggested_query = f"newest treatments for {medication} addiction for {illness} patients"
+            else:
+                suggested_query = None  # If there's no illness or medication, no suggested query
+
+        #query_answer = None
+        if suggested_query:
+            # Send the suggested query to the service on port 8000
+            response = requests.post("http://127.0.0.1:8000/ask_question", json={"query": suggested_query})
+            if response.status_code == 200:
+                query_answer = response.json().get("answer", "No answer found.")
+            else:
+                query_answer = "Error retrieving the answer from query service."
+
         return jsonify({
             "prediction": {
                 "probability": float(predicted_prob),
                 "description": verdict
-            }
+            },
+            "query_answer": suggested_query
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -97,4 +116,4 @@ def home():
     return "Drug Abuse Detection API is live!"
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=os.getenv("PORT"))
+    app.run(host='0.0.0.0', port=5000)

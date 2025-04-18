@@ -1,8 +1,9 @@
+#%%
 import os
 import requests
 import json
 import time
-
+#%%
 API_URL = "http://127.0.0.1:5000/drug_abuse_detector"
 RAG_URL = "http://127.0.0.1:8000/ask_question"
 DATA_DIR = r"C:\Users\Dell\Downloads\predictions\data_to_predict"
