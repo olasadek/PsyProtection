@@ -8,7 +8,7 @@ Base URLs:
 Note: Replace base URLs with production endpoints when deployed.
 """
 
-# ====================== MRI VALIDATION ======================
+# MRI VALIDATION 
 """
 POST /validate_mri
 Purpose: Validate an MRI file before full processing
@@ -35,7 +35,7 @@ const validateMRI = async (file) => {
 };
 """
 
-# ====================== MAIN PREDICTION ======================
+#  MAIN PREDICTION 
 """
 POST /drug_abuse_detector
 Purpose: Submit MRI and EHR data for drug abuse prediction
@@ -90,7 +90,7 @@ const predict = async (mriFile, ehrData) => {
 };
 """
 
-# ====================== PREDICTION HISTORY ======================
+# PREDICTION HISTORY 
 """
 GET /get_predictions
 Purpose: Retrieve past predictions
@@ -122,7 +122,7 @@ const getHistory = async (patientId) => {
 };
 """
 
-# ====================== RAG SYSTEM ======================
+# RAG SYSTEM 
 """
 POST /ask_question
 Purpose: Query the treatment information system
@@ -148,7 +148,7 @@ const askQuestion = async (question) => {
 };
 """
 
-# ====================== AUTO-RUNNER CONFIG ======================
+#  AUTO-RUNNER CONFIG 
 """
 The auto-runner system monitors the data directory at:
 C:\Users\Dell\Downloads\predictions\data_to_predict
@@ -181,7 +181,7 @@ Error responses include:
 }
 """
 
-# ====================== EXAMPLE EHR PAYLOAD ======================
+#  EXAMPLE EHR PAYLOAD 
 EXAMPLE_EHR = {
     "age": 35,
     "educ_yr": 12,
