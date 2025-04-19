@@ -52,20 +52,35 @@ FRIENDLY_TO_MODEL_KEYS = {
     "current medication": "medication"
 }
 
-def validate_mri_file(file_obj):
+def validate_mri_file(file_stream):
+    """Validate if the uploaded file is a proper MRI (NIfTI)"""
     try:
-        magic = file_obj.read(4)
-        file_obj.seek(0)
-        if magic not in [b'\x6E\x69\x31\x00', b'n+1']:
+        # Check first 4 bytes for NIfTI magic number
+        magic = file_stream.read(4)
+        file_stream.seek(0)
+        
+        if magic not in [b'\x1f\x8b\x08\x08', b'n+1']:  # NIfTI magic numbers
             return False, "Invalid file header (not NIfTI)"
-        img = nib.load(file_obj)
-        file_obj.seek(0)
+        # Write bytes to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
+            temp_file.write(file_stream.read())
+            temp_path = temp_file.name
+        # Try loading the file
+        try:
+            img = nib.load(temp_path)
+            file_stream.seek(0)
+        except Exception as e:
+            return False, f"Invalid NIfTI file: {str(e)}"
+         # Check dimensionality
         if len(img.shape) not in [3, 4]:
             return False, f"Invalid dimensions {img.shape}. Expected 3D or 4D"
+        # Check data range
         data = img.get_fdata()
         if np.any(np.isnan(data)):
             return False, "MRI contains NaN values"
-        return True, "Valid MRI file"
+            
+        return  True, "Valid MRI file"
+        
     except Exception as e:
         return False, f"Validation error: {str(e)}"
 
@@ -109,6 +124,7 @@ def mri_occlusion_explain_internal(mri_data):
 
         vit = ViTImageEncoder()
         vit.eval()
+        model = MultiModalDiagnosticNet(ehr_input_dim=16)
         classifier = model.classifier
         dummy_ehr = torch.zeros((1, 50))
 
@@ -190,7 +206,7 @@ def drug_abuse_detector():
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
             file.save(temp_file.name)
             mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
+            mri_data1 = mri_scan.get_fdata()
 
         # Process EHR data
         patient_id = request.form.get('patient_id', 'unknown')
@@ -204,9 +220,11 @@ def drug_abuse_detector():
             return jsonify({"error": "Invalid EHR JSON format"}), 400
 
         # Normalize and transform MRI
-        middle_slice = mri_data[:, :, mri_data.shape[2] // 2]
-        middle_slice = (middle_slice - np.min(middle_slice)) / (np.max(middle_slice) - np.min(middle_slice))
         mri_tensor = transform(middle_slice).unsqueeze(0).float()
+        mri_data = mri_data1.reshape(-1, mri_data1.shape[1])
+        mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
+        mri_tensor = transform(mri_data).unsqueeze(0).float()
+        
 
         # Prepare EHR features
         ehr_model_ready = {FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()}
@@ -229,7 +247,7 @@ def drug_abuse_detector():
         # Optional explanation
         heatmap_path = None
         if predicted_class == 1:
-            explanation = mri_occlusion_explain_internal(mri_data)
+            explanation = mri_occlusion_explain_internal(mri_data1)
             if "error" in explanation:
                 return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
             heatmap_path = explanation['heatmap_url'].split('/static/')[-1]
