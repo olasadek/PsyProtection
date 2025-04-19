@@ -16,7 +16,7 @@ import io
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
 
 # ====================== PATH CONFIGURATION ======================
-BASE_DIR = r"C:\Users\Dell\Downloads\PsyProtection-main\PsyProtection-main\multimodal-drug-detector"
+BASE_DIR = r"C:\Users\Dell\Downloads\PsyProtection-main\multimodal-drug-detector"
 MODEL_PATH = os.path.join(BASE_DIR, "multi_modal_diagnostic_model.pkl")
 SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
 ENCODER_PATH = os.path.join(BASE_DIR, "encoder.pkl")
@@ -57,38 +57,6 @@ FRIENDLY_TO_MODEL_KEYS = {
     "current medication": "medication"
 }
 
-# ====================== VALIDATION FUNCTIONS ======================
-def validate_mri_file(file_stream):
-    """Validate if the uploaded file is a proper MRI (NIfTI)"""
-    try:
-        # Check first 4 bytes for NIfTI magic number
-        magic = file_stream.read(4)
-        file_stream.seek(0)
-        
-        if magic not in [b'\x6E\x69\x31\x00', b'n+1']:  # NIfTI magic numbers
-            return False, "Invalid file header (not NIfTI)"
-        
-        # Try loading the file
-        try:
-            img = nib.load(file_stream)
-            file_stream.seek(0)
-        except Exception as e:
-            return False, f"Invalid NIfTI file: {str(e)}"
-        
-        # Check dimensionality
-        if len(img.shape) not in [3, 4]:
-            return False, f"Invalid dimensions {img.shape}. Expected 3D or 4D"
-        
-        # Check data range
-        data = img.get_fdata()
-        if np.any(np.isnan(data)):
-            return False, "MRI contains NaN values"
-            
-        return True, "Valid MRI file"
-        
-    except Exception as e:
-        return False, f"Validation error: {str(e)}"
-
 # ====================== DATABASE FUNCTIONS ======================
 def init_db():
     with sqlite3.connect(DATABASE_PATH) as conn:
@@ -103,23 +71,22 @@ def init_db():
                       explanation_url TEXT,
                       query_answer TEXT,
                       timestamp DATETIME,
-                      heatmap_path TEXT,
-                      validation_status TEXT)''')
+                      heatmap_path TEXT)''')  # Removed validation_status column
         c.execute('CREATE INDEX IF NOT EXISTS idx_patient_id ON predictions(patient_id)')
         conn.commit()
 
 def store_prediction(patient_id, prediction_prob, prediction_class, verdict, 
-                    ehr_data, explanation_url, query_answer, heatmap_path, validation_status):
+                    ehr_data, explanation_url, query_answer, heatmap_path):
     with sqlite3.connect(DATABASE_PATH) as conn:
         c = conn.cursor()
         c.execute('''INSERT INTO predictions 
                      (patient_id, prediction_prob, prediction_class, verdict,
                       ehr_data, explanation_url, query_answer, timestamp, 
-                      heatmap_path, validation_status)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                      heatmap_path)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                   (patient_id, prediction_prob, prediction_class, verdict,
                    json.dumps(ehr_data), explanation_url, query_answer, 
-                   datetime.now(), heatmap_path, validation_status))
+                   datetime.now(), heatmap_path))
         conn.commit()
 
 # ====================== CORE PROCESSING FUNCTIONS ======================
@@ -204,37 +171,10 @@ These regions are consistent with neural patterns observed in drug abuse-related
         f.write(summary_text)
 
 # ====================== ROUTES ======================
-@app.route('/validate_mri', methods=['POST'])
-def validate_mri():
-    """Standalone MRI validation endpoint"""
-    if 'file' not in request.files:
-        return jsonify({"valid": False, "error": "No file uploaded"}), 400
-    
-    file = request.files['file']
-    if not file.filename:
-        return jsonify({"valid": False, "error": "Empty filename"}), 400
-    
-    try:
-        # Save to memory buffer for validation
-        file_stream = io.BytesIO()
-        file.save(file_stream)
-        file_stream.seek(0)
-        
-        is_valid, message = validate_mri_file(file_stream)
-        file_stream.close()
-        
-        return jsonify({
-            "valid": is_valid,
-            "message": message,
-            "filename": file.filename
-        })
-    except Exception as e:
-        return jsonify({"valid": False, "error": str(e)}), 500
-
 @app.route('/drug_abuse_detector', methods=['POST'])
 def drug_abuse_detector():
     try:
-        # Validate MRI first
+        # Check for required files and data
         if 'file' not in request.files:
             return jsonify({"error": "No MRI file uploaded"}), 400
             
@@ -242,13 +182,6 @@ def drug_abuse_detector():
         file_stream = io.BytesIO()
         file.save(file_stream)
         file_stream.seek(0)
-        
-        is_valid, validation_msg = validate_mri_file(file_stream)
-        if not is_valid:
-            return jsonify({
-                "error": "Invalid MRI file",
-                "details": validation_msg
-            }), 400
         
         # Process EHR data
         patient_id = request.form.get('patient_id', 'unknown')
@@ -265,8 +198,11 @@ def drug_abuse_detector():
         file_stream.seek(0)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
             file_stream.save(temp_file.name)
-            mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
+            try:
+                mri_scan = nib.load(temp_file.name)
+                mri_data = mri_scan.get_fdata()
+            except Exception as e:
+                return jsonify({"error": f"Failed to load MRI file: {str(e)}"}), 400
         
         mri_data = mri_data.reshape(-1, mri_data.shape[1])
         mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
@@ -326,8 +262,7 @@ def drug_abuse_detector():
             ehr_data=ehr_dict,
             explanation_url=explanation['heatmap_url'],
             query_answer=query_answer,
-            heatmap_path=heatmap_path,
-            validation_status=validation_msg
+            heatmap_path=heatmap_path
         )
 
         return jsonify({
@@ -336,7 +271,6 @@ def drug_abuse_detector():
                 "class": int(predicted_class),
                 "description": verdict
             },
-            "validation": validation_msg,
             "explanation": explanation['heatmap_url'],
             "query_answer": query_answer
         })
