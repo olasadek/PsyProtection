@@ -12,29 +12,25 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import requests
 import sqlite3
+import io
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
 
-# PATH CONFIGURATION
+# ====================== PATH CONFIGURATION ======================
 BASE_DIR = r"C:\Users\Dell\Downloads\PsyProtection-main\PsyProtection-main\multimodal-drug-detector"
-
-# Model files
 MODEL_PATH = os.path.join(BASE_DIR, "multi_modal_diagnostic_model.pkl")
 SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
 ENCODER_PATH = os.path.join(BASE_DIR, "encoder.pkl")
-
-# Application paths
 STATIC_PATH = os.path.join(BASE_DIR, "static")
 DATABASE_PATH = os.path.join(BASE_DIR, "predictions.db")
 
-# APPLICATION SETUP 
+# ====================== APPLICATION SETUP ======================
 app = Flask(__name__, static_folder=STATIC_PATH)
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max upload
 
 # Load model and transformers
 model = joblib.load(MODEL_PATH)
 scaler = joblib.load(SCALER_PATH)
 encoder = joblib.load(ENCODER_PATH)
-
-
 
 # Image transform
 transform = transforms.Compose([
@@ -61,8 +57,40 @@ FRIENDLY_TO_MODEL_KEYS = {
     "current medication": "medication"
 }
 
+# ====================== VALIDATION FUNCTIONS ======================
+def validate_mri_file(file_stream):
+    """Validate if the uploaded file is a proper MRI (NIfTI)"""
+    try:
+        # Check first 4 bytes for NIfTI magic number
+        magic = file_stream.read(4)
+        file_stream.seek(0)
+        
+        if magic not in [b'\x6E\x69\x31\x00', b'n+1']:  # NIfTI magic numbers
+            return False, "Invalid file header (not NIfTI)"
+        
+        # Try loading the file
+        try:
+            img = nib.load(file_stream)
+            file_stream.seek(0)
+        except Exception as e:
+            return False, f"Invalid NIfTI file: {str(e)}"
+        
+        # Check dimensionality
+        if len(img.shape) not in [3, 4]:
+            return False, f"Invalid dimensions {img.shape}. Expected 3D or 4D"
+        
+        # Check data range
+        data = img.get_fdata()
+        if np.any(np.isnan(data)):
+            return False, "MRI contains NaN values"
+            
+        return True, "Valid MRI file"
+        
+    except Exception as e:
+        return False, f"Validation error: {str(e)}"
+
+# ====================== DATABASE FUNCTIONS ======================
 def init_db():
-    """Initialize the SQLite database"""
     with sqlite3.connect(DATABASE_PATH) as conn:
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS predictions
@@ -75,112 +103,26 @@ def init_db():
                       explanation_url TEXT,
                       query_answer TEXT,
                       timestamp DATETIME,
-                      heatmap_path TEXT)''')
+                      heatmap_path TEXT,
+                      validation_status TEXT)''')
         c.execute('CREATE INDEX IF NOT EXISTS idx_patient_id ON predictions(patient_id)')
         conn.commit()
 
 def store_prediction(patient_id, prediction_prob, prediction_class, verdict, 
-                    ehr_data, explanation_url, query_answer, heatmap_path):
-    """Store prediction results in database"""
+                    ehr_data, explanation_url, query_answer, heatmap_path, validation_status):
     with sqlite3.connect(DATABASE_PATH) as conn:
         c = conn.cursor()
         c.execute('''INSERT INTO predictions 
                      (patient_id, prediction_prob, prediction_class, verdict,
-                      ehr_data, explanation_url, query_answer, timestamp, heatmap_path)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                      ehr_data, explanation_url, query_answer, timestamp, 
+                      heatmap_path, validation_status)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                   (patient_id, prediction_prob, prediction_class, verdict,
                    json.dumps(ehr_data), explanation_url, query_answer, 
-                   datetime.now(), heatmap_path))
+                   datetime.now(), heatmap_path, validation_status))
         conn.commit()
 
-@app.route('/')
-def home():
-    return "Drug Abuse Detection & Explanation API is live!"
-
-@app.route('/drug_abuse_detector', methods=['POST'])
-def drug_abuse_detector():
-    try:
-        file = request.files['file']
-        patient_id = request.form.get('patient_id', 'unknown')
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
-            file.save(temp_file.name)
-            mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
-
-        mri_data = mri_data.reshape(-1, mri_data.shape[1])
-        mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
-        mri_data = transform(mri_data).unsqueeze(0).float()
-        
-        ehr_raw = request.form.get('EHR_features')
-        ehr_dict = json.loads(ehr_raw)
-
-        ehr_model_ready = {
-            FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()
-        }
-
-        ehr_df = pd.DataFrame([ehr_model_ready])
-        numeric_cols = ehr_df.select_dtypes(include=['int64', 'float64']).columns
-        categorical_cols = ehr_df.select_dtypes(include=['object', 'category']).columns
-        ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
-        ehr_df[categorical_cols] = encoder.transform(ehr_df[categorical_cols])
-        ehr_tensor = torch.from_numpy(ehr_df.values).float()
-        
-        with torch.no_grad():
-            predictions = model(mri_data, ehr_tensor)
-            predicted_prob = predictions.item()
-            predicted_class = (predictions >= 0.5).float()
-
-        verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
-        ehr_dict["Verdict"] = verdict
-
-        # Generate explanation if positive
-        heatmap_path = None
-        if predicted_class == 1:
-            explanation = mri_occlusion_explain_internal(mri_data)
-            heatmap_path = explanation['heatmap_url'].split('/static/')[-1]
-        else:
-            explanation = {"heatmap_url": None}
-
-        # Get RAG answer if needed
-        query_answer = None
-        if predicted_class == 1:
-            medication = ehr_dict.get("medication", "")
-            illness = ehr_dict.get("illness", "")
-            if medication and illness:
-                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
-                try:
-                    response = requests.post("http://127.0.0.1:8000/ask_question", 
-                                           json={"query": rag_query})
-                    query_answer = response.json().get("answer", "No answer found.")
-                except Exception as e:
-                    query_answer = f"Error retrieving RAG answer: {str(e)}"
-
-        # Store everything in database
-        store_prediction(
-            patient_id=patient_id,
-            prediction_prob=float(predicted_prob),
-            prediction_class=int(predicted_class),
-            verdict=verdict,
-            ehr_data=ehr_dict,
-            explanation_url=explanation['heatmap_url'],
-            query_answer=query_answer,
-            heatmap_path=heatmap_path
-        )
-
-        return jsonify({
-            "prediction": {
-                "probability": float(predicted_prob),
-                "class": int(predicted_class),
-                "description": verdict
-            },
-            "explanation": explanation['heatmap_url'],
-            "query_answer": query_answer
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
+# ====================== CORE PROCESSING FUNCTIONS ======================
 def mri_occlusion_explain_internal(mri_data):
     """Internal version of occlusion explanation without Flask request"""
     try:
@@ -260,6 +202,147 @@ These regions are consistent with neural patterns observed in drug abuse-related
     summary_path = heatmap_path.replace(".png", "_summary.txt")
     with open(summary_path, "w", encoding="utf-8") as f:
         f.write(summary_text)
+
+# ====================== ROUTES ======================
+@app.route('/validate_mri', methods=['POST'])
+def validate_mri():
+    """Standalone MRI validation endpoint"""
+    if 'file' not in request.files:
+        return jsonify({"valid": False, "error": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    if not file.filename:
+        return jsonify({"valid": False, "error": "Empty filename"}), 400
+    
+    try:
+        # Save to memory buffer for validation
+        file_stream = io.BytesIO()
+        file.save(file_stream)
+        file_stream.seek(0)
+        
+        is_valid, message = validate_mri_file(file_stream)
+        file_stream.close()
+        
+        return jsonify({
+            "valid": is_valid,
+            "message": message,
+            "filename": file.filename
+        })
+    except Exception as e:
+        return jsonify({"valid": False, "error": str(e)}), 500
+
+@app.route('/drug_abuse_detector', methods=['POST'])
+def drug_abuse_detector():
+    try:
+        # Validate MRI first
+        if 'file' not in request.files:
+            return jsonify({"error": "No MRI file uploaded"}), 400
+            
+        file = request.files['file']
+        file_stream = io.BytesIO()
+        file.save(file_stream)
+        file_stream.seek(0)
+        
+        is_valid, validation_msg = validate_mri_file(file_stream)
+        if not is_valid:
+            return jsonify({
+                "error": "Invalid MRI file",
+                "details": validation_msg
+            }), 400
+        
+        # Process EHR data
+        patient_id = request.form.get('patient_id', 'unknown')
+        ehr_raw = request.form.get('EHR_features')
+        if not ehr_raw:
+            return jsonify({"error": "No EHR data provided"}), 400
+            
+        try:
+            ehr_dict = json.loads(ehr_raw)
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid EHR JSON format"}), 400
+
+        # Prepare MRI data
+        file_stream.seek(0)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
+            file_stream.save(temp_file.name)
+            mri_scan = nib.load(temp_file.name)
+            mri_data = mri_scan.get_fdata()
+        
+        mri_data = mri_data.reshape(-1, mri_data.shape[1])
+        mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
+        mri_data = transform(mri_data).unsqueeze(0).float()
+        
+        # Prepare EHR features
+        ehr_model_ready = {
+            FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()
+        }
+
+        ehr_df = pd.DataFrame([ehr_model_ready])
+        numeric_cols = ehr_df.select_dtypes(include=['int64', 'float64']).columns
+        categorical_cols = ehr_df.select_dtypes(include=['object', 'category']).columns
+        ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
+        ehr_df[categorical_cols] = encoder.transform(ehr_df[categorical_cols])
+        ehr_tensor = torch.from_numpy(ehr_df.values).float()
+        
+        # Make prediction
+        with torch.no_grad():
+            predictions = model(mri_data, ehr_tensor)
+            predicted_prob = predictions.item()
+            predicted_class = (predictions >= 0.5).float()
+
+        verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
+        ehr_dict["Verdict"] = verdict
+
+        # Generate explanation if positive
+        heatmap_path = None
+        if predicted_class == 1:
+            explanation = mri_occlusion_explain_internal(mri_data)
+            if "error" in explanation:
+                return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
+            heatmap_path = explanation['heatmap_url'].split('/static/')[-1]
+        else:
+            explanation = {"heatmap_url": None}
+
+        # Get RAG answer if needed
+        query_answer = None
+        if predicted_class == 1:
+            medication = ehr_dict.get("medication", "")
+            illness = ehr_dict.get("illness", "")
+            if medication and illness:
+                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
+                try:
+                    response = requests.post("http://127.0.0.1:8000/ask_question", 
+                                         json={"query": rag_query})
+                    query_answer = response.json().get("answer", "No answer found.")
+                except Exception as e:
+                    query_answer = f"Error retrieving RAG answer: {str(e)}"
+
+        # Store everything in database
+        store_prediction(
+            patient_id=patient_id,
+            prediction_prob=float(predicted_prob),
+            prediction_class=int(predicted_class),
+            verdict=verdict,
+            ehr_data=ehr_dict,
+            explanation_url=explanation['heatmap_url'],
+            query_answer=query_answer,
+            heatmap_path=heatmap_path,
+            validation_status=validation_msg
+        )
+
+        return jsonify({
+            "prediction": {
+                "probability": float(predicted_prob),
+                "class": int(predicted_class),
+                "description": verdict
+            },
+            "validation": validation_msg,
+            "explanation": explanation['heatmap_url'],
+            "query_answer": query_answer
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/mri_occlusion_explain', methods=['POST'])
 def mri_occlusion_explain():
