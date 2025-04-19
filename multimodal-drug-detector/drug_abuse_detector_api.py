@@ -220,7 +220,6 @@ def drug_abuse_detector():
             return jsonify({"error": "Invalid EHR JSON format"}), 400
 
         # Normalize and transform MRI
-        mri_tensor = transform(middle_slice).unsqueeze(0).float()
         mri_data = mri_data1.reshape(-1, mri_data1.shape[1])
         mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
         mri_tensor = transform(mri_data).unsqueeze(0).float()
