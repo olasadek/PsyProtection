@@ -3,7 +3,6 @@ import os
 import torch
 import pandas as pd
 import nibabel as nib
-from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 import numpy as np
 import tempfile
 import torchvision.transforms as transforms
@@ -12,17 +11,30 @@ import json
 import matplotlib.pyplot as plt
 from datetime import datetime
 import requests
-
+import sqlite3
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
 
-# Setup
-STATIC_PATH = "C:/Users/Dell/Downloads/predictions/static"
+# PATH CONFIGURATION
+BASE_DIR = r"C:\Users\Dell\Downloads\PsyProtection-main\PsyProtection-main\multimodal-drug-detector"
+
+# Model files
+MODEL_PATH = os.path.join(BASE_DIR, "multi_modal_diagnostic_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
+ENCODER_PATH = os.path.join(BASE_DIR, "encoder.pkl")
+
+# Application paths
+STATIC_PATH = os.path.join(BASE_DIR, "static")
+DATABASE_PATH = os.path.join(BASE_DIR, "predictions.db")
+
+# APPLICATION SETUP 
 app = Flask(__name__, static_folder=STATIC_PATH)
 
 # Load model and transformers
-model = joblib.load("multi_modal_diagnostic_model.pkl")
-scaler = joblib.load("scaler.pkl")
-encoder = joblib.load("encoder.pkl")
+model = joblib.load(MODEL_PATH)
+scaler = joblib.load(SCALER_PATH)
+encoder = joblib.load(ENCODER_PATH)
+
+
 
 # Image transform
 transform = transforms.Compose([
@@ -49,15 +61,48 @@ FRIENDLY_TO_MODEL_KEYS = {
     "current medication": "medication"
 }
 
+def init_db():
+    """Initialize the SQLite database"""
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS predictions
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      patient_id TEXT,
+                      prediction_prob REAL,
+                      prediction_class INTEGER,
+                      verdict TEXT,
+                      ehr_data TEXT,
+                      explanation_url TEXT,
+                      query_answer TEXT,
+                      timestamp DATETIME,
+                      heatmap_path TEXT)''')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_patient_id ON predictions(patient_id)')
+        conn.commit()
+
+def store_prediction(patient_id, prediction_prob, prediction_class, verdict, 
+                    ehr_data, explanation_url, query_answer, heatmap_path):
+    """Store prediction results in database"""
+    with sqlite3.connect(DATABASE_PATH) as conn:
+        c = conn.cursor()
+        c.execute('''INSERT INTO predictions 
+                     (patient_id, prediction_prob, prediction_class, verdict,
+                      ehr_data, explanation_url, query_answer, timestamp, heatmap_path)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                  (patient_id, prediction_prob, prediction_class, verdict,
+                   json.dumps(ehr_data), explanation_url, query_answer, 
+                   datetime.now(), heatmap_path))
+        conn.commit()
+
 @app.route('/')
 def home():
     return "Drug Abuse Detection & Explanation API is live!"
-
 
 @app.route('/drug_abuse_detector', methods=['POST'])
 def drug_abuse_detector():
     try:
         file = request.files['file']
+        patient_id = request.form.get('patient_id', 'unknown')
+        
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
             file.save(temp_file.name)
             mri_scan = nib.load(temp_file.name)
@@ -66,6 +111,7 @@ def drug_abuse_detector():
         mri_data = mri_data.reshape(-1, mri_data.shape[1])
         mri_data = (mri_data - np.min(mri_data)) / (np.max(mri_data) - np.min(mri_data))
         mri_data = transform(mri_data).unsqueeze(0).float()
+        
         ehr_raw = request.form.get('EHR_features')
         ehr_dict = json.loads(ehr_raw)
 
@@ -74,7 +120,6 @@ def drug_abuse_detector():
         }
 
         ehr_df = pd.DataFrame([ehr_model_ready])
-
         numeric_cols = ehr_df.select_dtypes(include=['int64', 'float64']).columns
         categorical_cols = ehr_df.select_dtypes(include=['object', 'category']).columns
         ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
@@ -89,62 +134,56 @@ def drug_abuse_detector():
         verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
         ehr_dict["Verdict"] = verdict
 
-         # After verdict logic
-        suggested_query = None
+        # Generate explanation if positive
+        heatmap_path = None
         if predicted_class == 1:
-            illness = ehr_dict.get("illness", "")
-            medication = ehr_dict.get("medication", "")
-            if illness and medication:
-                suggested_query = f"newest treatments for {medication} addiction for {illness} patients"
-            else:
-                suggested_query = None  # If there's no illness or medication, no suggested query
+            explanation = mri_occlusion_explain_internal(mri_data)
+            heatmap_path = explanation['heatmap_url'].split('/static/')[-1]
+        else:
+            explanation = {"heatmap_url": None}
 
+        # Get RAG answer if needed
         query_answer = None
-        if suggested_query:
-            # Send the suggested query to the service on port 8000
-            response = requests.post("http://127.0.0.1:8000/ask_question", json={"query": suggested_query})
-            if response.status_code == 200:
-                query_answer = response.json().get("answer", "No answer found.")
-            else:
-                query_answer = "Error retrieving the answer from query service."
+        if predicted_class == 1:
+            medication = ehr_dict.get("medication", "")
+            illness = ehr_dict.get("illness", "")
+            if medication and illness:
+                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
+                try:
+                    response = requests.post("http://127.0.0.1:8000/ask_question", 
+                                           json={"query": rag_query})
+                    query_answer = response.json().get("answer", "No answer found.")
+                except Exception as e:
+                    query_answer = f"Error retrieving RAG answer: {str(e)}"
+
+        # Store everything in database
+        store_prediction(
+            patient_id=patient_id,
+            prediction_prob=float(predicted_prob),
+            prediction_class=int(predicted_class),
+            verdict=verdict,
+            ehr_data=ehr_dict,
+            explanation_url=explanation['heatmap_url'],
+            query_answer=query_answer,
+            heatmap_path=heatmap_path
+        )
 
         return jsonify({
             "prediction": {
                 "probability": float(predicted_prob),
+                "class": int(predicted_class),
                 "description": verdict
             },
+            "explanation": explanation['heatmap_url'],
             "query_answer": query_answer
         })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
-def generate_summary(prediction, confidence, heatmap_path):
-    summary_text = f"""Prediction Summary
-
-🧠 Prediction: {'Drug Abuser' if prediction == 1 else 'Non-Abuser'}
-📊 Confidence: {confidence * 100:.2f}%
-
-Explanation:
-This heatmap highlights regions of the brain that influenced the model's decision. 
-Red = high impact, Blue = low impact on prediction.
-
-These regions are consistent with neural patterns observed in drug abuse-related cases during training.
-"""
-    summary_path = heatmap_path.replace(".png", "_summary.txt")
-    with open(summary_path, "w", encoding="utf-8") as f:
-        f.write(summary_text)
-
-
-@app.route('/mri_occlusion_explain', methods=['POST'])
-def mri_occlusion_explain():
+def mri_occlusion_explain_internal(mri_data):
+    """Internal version of occlusion explanation without Flask request"""
     try:
-        file = request.files['file']
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
-            file.save(temp_file.name)
-            mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
-
         middle_slice = mri_data[:, :, mri_data.shape[2] // 2]
         middle_slice = (middle_slice - np.min(middle_slice)) / (np.max(middle_slice) - np.min(middle_slice))
         image_tensor = transform(middle_slice).unsqueeze(0).float()
@@ -196,17 +235,73 @@ def mri_occlusion_explain():
 
         generate_summary(pred_class, confidence, heatmap_path)
 
-        return jsonify({
+        return {
             "explanation": "Occlusion-based explanation complete.",
             "base_prediction": base_pred,
-            "heatmap_url": f"http://localhost:5000/static/{heatmap_filename}",
+            "heatmap_url": f"/static/{heatmap_filename}",
             "summary_file": heatmap_filename.replace(".png", "_summary.txt")
-        })
+        }
 
+    except Exception as e:
+        return {"error": str(e)}
+
+def generate_summary(prediction, confidence, heatmap_path):
+    summary_text = f"""Prediction Summary
+
+🧠 Prediction: {'Drug Abuser' if prediction == 1 else 'Non-Abuser'}
+📊 Confidence: {confidence * 100:.2f}%
+
+Explanation:
+This heatmap highlights regions of the brain that influenced the model's decision. 
+Red = high impact, Blue = low impact on prediction.
+
+These regions are consistent with neural patterns observed in drug abuse-related cases during training.
+"""
+    summary_path = heatmap_path.replace(".png", "_summary.txt")
+    with open(summary_path, "w", encoding="utf-8") as f:
+        f.write(summary_text)
+
+@app.route('/mri_occlusion_explain', methods=['POST'])
+def mri_occlusion_explain():
+    """Public endpoint for occlusion explanation"""
+    try:
+        file = request.files['file']
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
+            file.save(temp_file.name)
+            mri_scan = nib.load(temp_file.name)
+            mri_data = mri_scan.get_fdata()
+        
+        result = mri_occlusion_explain_internal(mri_data)
+        if "error" in result:
+            return jsonify(result), 400
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route('/get_predictions', methods=['GET'])
+def get_predictions():
+    """Retrieve stored predictions"""
+    try:
+        patient_id = request.args.get('patient_id')
+        limit = request.args.get('limit', 100)
+        
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            
+            if patient_id:
+                c.execute('SELECT * FROM predictions WHERE patient_id = ? ORDER BY timestamp DESC LIMIT ?', 
+                         (patient_id, limit))
+            else:
+                c.execute('SELECT * FROM predictions ORDER BY timestamp DESC LIMIT ?', (limit,))
+                
+            predictions = [dict(row) for row in c.fetchall()]
+            
+        return jsonify(predictions)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     os.makedirs(STATIC_PATH, exist_ok=True)
+    init_db()
     app.run(host='0.0.0.0', port=5000)
