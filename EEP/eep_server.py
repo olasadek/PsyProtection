@@ -10,6 +10,7 @@ RAG_URL = "http://127.0.0.1:8000"
 
 @app.route('/analyze_patient', methods=['POST'])
 def analyze_patient():
+    # Check for required files and data
     if 'file' not in request.files or 'EHR_features' not in request.form:
         return jsonify({"error": "Missing MRI file or EHR features"}), 400
 
@@ -17,41 +18,38 @@ def analyze_patient():
     ehr_raw = request.form['EHR_features']
     patient_id = request.form.get('patient_id', 'unknown')
 
+    # Validate EHR JSON
     try:
         ehr_dict = json.loads(ehr_raw)
     except json.JSONDecodeError:
         return jsonify({"error": "EHR features must be valid JSON"}), 400
 
-    # Validate MRI
-    validate_resp = requests.post(f"{INTERNAL_URL}/validate_mri", files={'file': (file.filename, file)})
-    validation_result = validate_resp.json()
-    file.stream.seek(0)  # rewind for reuse
-
-    if not validation_result.get("valid", False):
-        return jsonify({
-            "error": "Invalid MRI file",
-            "details": validation_result.get("message", "")
-        }), 400
-
-    # Run main prediction
+    # Rewind file for reuse
     file.stream.seek(0)
-    response = requests.post(
-        f"{INTERNAL_URL}/drug_abuse_detector",
-        files={'file': (file.filename, file)},
-        data={
-            'patient_id': patient_id,
-            'EHR_features': json.dumps(ehr_dict)
-        }
-    )
 
+    # Run main prediction directly (no separate validation step)
     try:
+        response = requests.post(
+            f"{INTERNAL_URL}/drug_abuse_detector",
+            files={'file': (file.filename, file)},
+            data={
+                'patient_id': patient_id,
+                'EHR_features': json.dumps(ehr_dict)
+            }
+        )
+        response.raise_for_status()  # Raises exception for 4XX/5XX status codes
         result = response.json()
-    except Exception:
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            "error": "Failed to process prediction",
+            "details": str(e)
+        }), 500
+    except ValueError:
         return jsonify({"error": "Invalid response from internal predictor"}), 500
 
+    # Return simplified response without validation data
     return jsonify({
         "patient_id": patient_id,
-        "mri_validation": validation_result,
         "prediction_result": result
     })
 
