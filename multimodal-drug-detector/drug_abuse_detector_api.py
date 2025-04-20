@@ -9,10 +9,12 @@ import joblib
 import json
 import matplotlib.pyplot as plt
 from datetime import datetime
-import requests
 import sqlite3
-from flask import Flask, request, jsonify
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
+from flask_cors import CORS
+import base64
+from flask import send_file , Flask, request, jsonify, make_response
+import io
 
 BASE_DIR = r"C:\Users\Dell\Downloads\PsyProtection-main\multimodal-drug-detector"
 MODEL_PATH = os.path.join(BASE_DIR, "multi_modal_diagnostic_model.pkl")
@@ -22,6 +24,7 @@ STATIC_PATH = os.path.join(BASE_DIR, "static")
 DATABASE_PATH = os.path.join(BASE_DIR, "predictions.db")
 
 app = Flask(__name__, static_folder=STATIC_PATH)
+CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 
 model = joblib.load(MODEL_PATH)
@@ -184,112 +187,108 @@ These regions are consistent with neural patterns observed in drug abuse-related
 def drug_abuse_detector():
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No MRI file uploaded"}), 400
+            return jsonify({"error": "No MRI file provided"}), 400
+        if 'EHR_features' not in request.form:
+            return jsonify({"error": "No EHR features provided"}), 400
 
         file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No selected MRI file"}), 400
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
             file.save(temp_file.name)
-            mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
-
-        # Process EHR data
-        patient_id = request.form.get('patient_id', 'unknown')
-        ehr_raw = request.form.get('EHR_features')
-        if not ehr_raw:
-            return jsonify({"error": "No EHR data provided"}), 400
+            try:
+                mri_scan = nib.load(temp_file.name)
+                mri_data = mri_scan.get_fdata()
+            except Exception as e:
+                return jsonify({"error": f"Invalid MRI file: {str(e)}"}), 400
 
         try:
-            ehr_dict = json.loads(ehr_raw)
-        except json.JSONDecodeError:
-            return jsonify({"error": "Invalid EHR JSON format"}), 400
+            ehr_dict = json.loads(request.form['EHR_features'])
+            ehr_model_ready = {FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()}
+            for key, value in ehr_model_ready.items():
+                if isinstance(value, str):
+                    if value.replace('.', '', 1).isdigit():
+                        ehr_model_ready[key] = float(value) if '.' in value else int(value)
+            ehr_df = pd.DataFrame([ehr_model_ready])
+            numeric_cols = ehr_df.select_dtypes(include=['int64', 'float64']).columns
+            categorical_cols = ehr_df.select_dtypes(include=['object', 'category']).columns
+            ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
+            ehr_df[categorical_cols] = encoder.transform(ehr_df[categorical_cols])
+            ehr_tensor = torch.from_numpy(ehr_df.values).float()
+        except Exception as e:
+            return jsonify({"error": f"EHR processing failed: {str(e)}"}), 400
 
-        # Normalize and transform MRI
         middle_slice = mri_data[:, :, mri_data.shape[2] // 2]
         middle_slice = (middle_slice - np.min(middle_slice)) / (np.max(middle_slice) - np.min(middle_slice))
         mri_tensor = transform(middle_slice).unsqueeze(0).float()
 
-        # Prepare EHR features
-        ehr_model_ready = {FRIENDLY_TO_MODEL_KEYS.get(k, k): v for k, v in ehr_dict.items()}
-        ehr_df = pd.DataFrame([ehr_model_ready])
-        numeric_cols = ehr_df.select_dtypes(include=['int64', 'float64']).columns
-        categorical_cols = ehr_df.select_dtypes(include=['object', 'category']).columns
-        ehr_df[numeric_cols] = scaler.transform(ehr_df[numeric_cols])
-        ehr_df[categorical_cols] = encoder.transform(ehr_df[categorical_cols])
-        ehr_tensor = torch.from_numpy(ehr_df.values).float()
-
-        # Predict
         with torch.no_grad():
             predictions = model(mri_tensor, ehr_tensor)
             predicted_prob = predictions.item()
-            predicted_class = (predictions >= 0.5).float()
+            predicted_class = int(predictions >= 0.5)
 
         verdict = "Drug abuser" if predicted_class == 1 else "Not a drug abuser"
-        ehr_dict["Verdict"] = verdict
+        response_data = {
+            "prediction": {
+                "probability": float(predicted_prob),
+                "class": predicted_class,
+                "description": verdict
+            },
+            "ehr_data": ehr_dict,
+            "patient_id": request.form.get('patient_id', 'unknown')
+        }
 
-        # Optional explanation
-        heatmap_path = None
         if predicted_class == 1:
-            explanation = mri_occlusion_explain_internal(mri_data)
-            if "error" in explanation:
-                return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
-            heatmap_path = explanation['heatmap_url'].split('/static/')[-1]
-        else:
-            explanation = {"heatmap_url": None}
+            try:
+                explanation = mri_occlusion_explain_internal(mri_data)
+                if "error" in explanation:
+                    return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
 
-        # Optional RAG
-        query_answer = None
-        if predicted_class == 1:
-            medication = ehr_dict.get("medication", "")
-            illness = ehr_dict.get("illness", "")
-            if medication and illness:
-                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
-                try:
-                    response = requests.post("http://127.0.0.1:8000/ask_question", json={"query": rag_query})
-                    query_answer = response.json().get("answer", "No answer found.")
-                except Exception as e:
-                    query_answer = f"Error retrieving RAG answer: {str(e)}"
+                heatmap_path = os.path.join(STATIC_PATH, explanation['heatmap_url'].split('/static/')[-1])
+                response_data.update({
+                    "explanation": "Occlusion-based explanation generated",
+                    "heatmap_url": explanation['heatmap_url'],
+                    "base_prediction": explanation.get('base_prediction')
+                })
 
-        # Save prediction
+                store_prediction(
+                    patient_id=response_data["patient_id"],
+                    prediction_prob=float(predicted_prob),
+                    prediction_class=predicted_class,
+                    verdict=verdict,
+                    ehr_data=ehr_dict,
+                    explanation_url=explanation['heatmap_url'],
+                    query_answer=None,
+                    heatmap_path=explanation['heatmap_url'].split('/static/')[-1],
+                    validation_status="Not validated"
+                )
+
+                with open(heatmap_path, 'rb') as f:
+                    response = make_response(f.read())
+                response.headers.set('Content-Type', 'image/png')
+                response.headers.set('X-Prediction-Data', json.dumps(response_data))
+                return response
+
+            except Exception as e:
+                return jsonify({"error": f"Heatmap generation failed: {str(e)}"}), 500
+
         store_prediction(
-            patient_id=patient_id,
+            patient_id=response_data["patient_id"],
             prediction_prob=float(predicted_prob),
-            prediction_class=int(predicted_class),
+            prediction_class=predicted_class,
             verdict=verdict,
             ehr_data=ehr_dict,
-            explanation_url=explanation['heatmap_url'],
-            query_answer=query_answer,
-            heatmap_path=heatmap_path,
+            explanation_url=None,
+            query_answer=None,
+            heatmap_path=None,
             validation_status="Not validated"
         )
 
-        return jsonify({
-            "prediction": {
-                "probability": float(predicted_prob),
-                "class": int(predicted_class),
-                "description": verdict
-            },
-            "explanation": explanation['heatmap_url'],
-            "query_answer": query_answer
-        })
+        return jsonify(response_data)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-@app.route('/mri_occlusion_explain', methods=['POST'])
-def mri_occlusion_explain():
-    try:
-        file = request.files['file']
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".nii.gz") as temp_file:
-            file.save(temp_file.name)
-            mri_scan = nib.load(temp_file.name)
-            mri_data = mri_scan.get_fdata()
-
-        result = mri_occlusion_explain_internal(mri_data)
-        if "error" in result:
-            return jsonify(result), 400
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 @app.route('/get_predictions', methods=['GET'])
 def get_predictions():
