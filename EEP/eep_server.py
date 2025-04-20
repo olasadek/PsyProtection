@@ -1,57 +1,66 @@
 from flask import Flask, request, jsonify
-import requests
 import json
 import io
+import requests
 
 app = Flask(__name__)
 
-INTERNAL_URL = "http://127.0.0.1:5000"
-RAG_URL = "http://127.0.0.1:8000"
+PREDICTION_API_URL = "http://127.0.0.1:5000/drug_abuse_detector"
+RAG_API_URL = "http://127.0.0.1:8000/ask_question"
 
 @app.route('/analyze_patient', methods=['POST'])
 def analyze_patient():
-    # Check for required files and data
-    if 'file' not in request.files or 'EHR_features' not in request.form:
-        return jsonify({"error": "Missing MRI file or EHR features"}), 400
-
-    file = request.files['file']
-    ehr_raw = request.form['EHR_features']
-    patient_id = request.form.get('patient_id', 'unknown')
-
-    # Validate EHR JSON
     try:
-        ehr_dict = json.loads(ehr_raw)
-    except json.JSONDecodeError:
-        return jsonify({"error": "EHR features must be valid JSON"}), 400
+        # --- Validate incoming data ---
+        if 'file' not in request.files:
+            return jsonify({"error": "No MRI file uploaded"}), 400
+        if 'EHR_features' not in request.form:
+            return jsonify({"error": "No EHR data provided"}), 400
 
-    # Rewind file for reuse
-    file.stream.seek(0)
+        file = request.files['file']
+        ehr_raw = request.form['EHR_features']
+        patient_id = request.form.get('patient_id', 'unknown')
 
-    # Run main prediction directly (no separate validation step)
-    try:
-        response = requests.post(
-            f"{INTERNAL_URL}/drug_abuse_detector",
-            files={'file': (file.filename, file)},
-            data={
-                'patient_id': patient_id,
-                'EHR_features': json.dumps(ehr_dict)
-            }
-        )
-        response.raise_for_status()  # Raises exception for 4XX/5XX status codes
-        result = response.json()
-    except requests.exceptions.RequestException as e:
+        try:
+            ehr_dict = json.loads(ehr_raw)
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid EHR JSON format"}), 400
+
+        # --- Forward to Prediction API on port 5000 ---
+        files = {'file': (file.filename, file.stream, file.content_type)}
+        data = {
+            'EHR_features': json.dumps(ehr_dict),
+            'patient_id': patient_id
+        }
+        pred_response = requests.post(PREDICTION_API_URL, files=files, data=data)
+        if pred_response.status_code != 200:
+            return jsonify({"error": "Prediction API failed", "details": pred_response.text}), 500
+
+        pred_json = pred_response.json()
+        prediction = pred_json.get("prediction", {})
+        prediction_class = prediction.get("class", 0)
+
+        # --- If drug abuser, ask RAG ---
+        query_answer = None
+        if prediction_class == 1:
+            medication = ehr_dict.get("medication", "")
+            illness = ehr_dict.get("illness", "")
+            if medication and illness:
+                rag_query = f"newest treatments for {medication} addiction for {illness} patients"
+                try:
+                    rag_response = requests.post(RAG_API_URL, json={"query": rag_query})
+                    query_answer = rag_response.json().get("answer", "No answer found.")
+                except Exception as e:
+                    query_answer = f"RAG error: {str(e)}"
+
         return jsonify({
-            "error": "Failed to process prediction",
-            "details": str(e)
-        }), 500
-    except ValueError:
-        return jsonify({"error": "Invalid response from internal predictor"}), 500
+            "prediction": prediction,
+            "query_answer": query_answer
+        })
 
-    # Return simplified response without validation data
-    return jsonify({
-        "patient_id": patient_id,
-        "prediction_result": result
-    })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9000, debug=True)
