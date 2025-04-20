@@ -1,1 +1,3 @@
-.
+
+The model weights for multi_model_diagnostic_model are available at the following URL:
+https://mailaub-my.sharepoint.com/:f:/g/personal/ohi00_mail_aub_edu/EndHbFceyPZFstGMsuocnfoBA_PnOtb4umk_GBLzyrmCNg?e=piVclH
