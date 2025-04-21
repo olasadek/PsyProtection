@@ -1,7 +1,4 @@
 const PredictionResult = ({ result }) => {
-  // Log the result so we can see if we have data.
-  console.log('PredictionResult received:', result);
-  
   if (!result || !result.prediction) return null;
 
   const prediction = result.prediction || {};
@@ -26,20 +23,42 @@ const PredictionResult = ({ result }) => {
         </div>
 
         {explanation && (
-          <div className="result-section">
-            <h4>Explanation</h4>
-            <img
-              src={explanation}
-              alt="MRI heatmap explanation"
-              className="heatmap"
-            />
+          <div className="result-section explanation-section">
+            <h4>Model Explanation</h4>
+            <div className="heatmap-container" style={{ textAlign: 'center' }}>
+              <img
+                src={explanation}
+                alt="MRI heatmap explanation"
+                className="heatmap"
+                style={{ margin: '0 auto' }}
+              />
+            </div>
+            <p className="heatmap-caption" style={{ 
+              fontSize: '1.2rem', 
+              textAlign: 'center',
+              margin: '20px auto',
+              maxWidth: '800px'
+            }}>
+              The heatmap highlights regions of your MRI scan that most influenced 
+              our AI model's prediction. Warmer colors (red/yellow) indicate areas 
+              of greater significance in the analysis.
+              Abnormalities in: the basal ganglia, the extended amygdala, 
+              and the prefrontal cortex.
+            </p>
           </div>
         )}
 
         {queryAnswer && (
-          <div className="result-section">
+          <div className="result-section treatment-section" style={{ textAlign: 'center' }}>
             <h4>Treatment Recommendation</h4>
-            <p className="treatment-answer">{queryAnswer}</p>
+            <p className="treatment-answer" style={{
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              margin: '20px auto',
+              maxWidth: '800px'
+            }}>
+              {queryAnswer}
+            </p>
           </div>
         )}
       </div>
