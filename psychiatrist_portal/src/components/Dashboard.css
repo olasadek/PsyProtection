@@ -1,0 +1,120 @@
+/* Dashboard.css */
+
+.dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #000;  /* Black background for entire dashboard */
+    color: #fff;       /* White text globally */
+  }
+  
+  /* Sidebar styling for the form */
+  .dashboard-sidebar {
+    flex: 1 1 300px;
+    padding: 20px;
+    background: #111;  /* Slightly lighter black for contrast */
+    border-right: 1px solid #444;
+  }
+  
+  /* Main content styling for the analysis result */
+  .dashboard-content {
+    flex: 2 1 600px;
+    padding: 20px;
+  }
+  
+  /* Additional styling */
+  .dashboard h2 {
+    margin-bottom: 20px;
+    color: #fff;
+  }
+  
+  .dashboard p {
+    font-size: 1.1rem;
+    color: #ccc;
+  }
+  
+  /* Form inputs and labels can also be styled for better visibility on dark background */
+  .patient-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #fff;
+  }
+  
+  .patient-form input[type="text"],
+  .patient-form input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #222;
+    color: #fff;
+  }
+  
+  .patient-form .submit-btn {
+    padding: 10px 20px;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .patient-form .submit-btn:hover {
+    background: #666;
+  }
+  
+  /* Result card styling */
+  .prediction-result .result-card {
+    border: 1px solid #444;
+    padding: 15px;
+    margin: 10px 0;
+    background: #111;
+  }
+  
+  .prediction-result .result-section {
+    margin-bottom: 15px;
+  }
+  
+  .prediction-result .verdict {
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 5px;
+    color: #fff;
+  }
+  
+  .prediction-result .verdict.positive {
+    background-color: green;
+  }
+  
+  .prediction-result .verdict.negative {
+    background-color: red;
+  }
+  
+  .prediction-result .confidence {
+    margin-top: 10px;
+  }
+  
+  .prediction-result .heatmap {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+  }
+  
+  .prediction-result .treatment-answer {
+    font-style: italic;
+    color: #ddd;
+  }
+  
+  /* Optional: responsive adjustments */
+  @media (max-width: 800px) {
+    .dashboard {
+      flex-direction: column;
+    }
+    .dashboard-sidebar {
+      border-right: none;
+      border-bottom: 1px solid #444;
+    }
+  }
+  
