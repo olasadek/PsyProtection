@@ -9,9 +9,11 @@ from bs4 import BeautifulSoup
 import json
 import asyncio
 from tinydb import TinyDB, Query as TinyQuery
+from config import entrez_email, openai_api_key
 
-Entrez.email = "example@gmail.com"
-openai.api_key = "your_api_key"
+Entrez.email =  entrez_email
+openai.api_key = openai_api_key
+
 sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 app = Flask(__name__)
