@@ -38,33 +38,111 @@ If you aren't satisfied with the build tool and configuration choices, you can `
 Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
 You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# 🧠 PsyProtection: Drug Abuse Detection Platform
 
-## Learn More
+This is a multimodal diagnostic tool for detecting potential drug abuse based on MRI and EHR data. The system consists of a React frontend and Flask-based backend with multiple services.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📁 Project Structure
 
-### Code Splitting
+```
+psyprotection/
+├── psychiatrist-portal/         # Frontend (React)
+├── api_predict/                 # Flask backend (port 5000)
+├── api_heatmap/                 # Flask XAI service (port 5001)
+├── orchestrator/                # Entry Endpoint Processor (port 9000)
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## ⚙️ Requirements
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 🧩 Frontend
+- Node.js >= 18
+- npm or yarn
 
-### Making a Progressive Web App
+### 🐍 Backend
+- Python >= 3.8
+- pip
+- (Recommended) virtualenv
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## 🚀 Getting Started
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 1. Clone the repository
 
-### Deployment
+```bash
+git clone https://github.com/your-username/PsyProtection.git
+cd PsyProtection
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+### 2. Run the Frontend (React)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+cd psychiatrist-portal
+npm install
+npm start
+```
+
+The app will start at: [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 3. Run the Backend APIs
+
+> Open **three terminals** (or split terminals in VS Code):
+
+#### a) Prediction API (port 5000)
+
+```bash
+cd api_predict
+pip install -r requirements.txt
+python api_predict.py
+```
+
+#### b) Explanation API (port 5001)
+
+```bash
+cd api_heatmap
+pip install -r requirements.txt
+python api_heatmap.py
+```
+
+#### c) Orchestrator API (port 9000)
+
+```bash
+cd orchestrator
+pip install -r requirements.txt
+python orchestrator.py
+```
+
+---
+
+## 🧪 Usage
+
+1. Fill out the patient EHR form in the UI.
+2. Upload a `.nii` or `.nii.gz` MRI file.
+3. Submit the form.
+4. If the result is **"Drug Abuser"**, a heatmap explanation is displayed.
+5. A treatment recommendation is shown using biomedical RAG.
+
+---
+
+## 🛠️ Ignore These in Git
+
+Add the following to your `.gitignore`:
+
+```
+node_modules/
+__pycache__/
+.env
+*.nii
+*.nii.gz
+*.pt
+venv/
+```
+
