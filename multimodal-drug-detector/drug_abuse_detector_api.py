@@ -239,56 +239,22 @@ def drug_abuse_detector():
             "patient_id": request.form.get('patient_id', 'unknown')
         }
 
-        if predicted_class == 1:
-            try:
-                explanation = mri_occlusion_explain_internal(mri_data)
-                if "error" in explanation:
-                    return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
-
-                heatmap_path = os.path.join(STATIC_PATH, explanation['heatmap_url'].split('/static/')[-1])
-                response_data.update({
-                    "explanation": "Occlusion-based explanation generated",
-                    "heatmap_url": explanation['heatmap_url'],
-                    "base_prediction": explanation.get('base_prediction')
-                })
-
-                store_prediction(
-                    patient_id=response_data["patient_id"],
-                    prediction_prob=float(predicted_prob),
-                    prediction_class=predicted_class,
-                    verdict=verdict,
-                    ehr_data=ehr_dict,
-                    explanation_url=explanation['heatmap_url'],
-                    query_answer=None,
-                    heatmap_path=explanation['heatmap_url'].split('/static/')[-1],
-                    validation_status="Not validated"
-                )
-
-                with open(heatmap_path, 'rb') as f:
-                    response = make_response(f.read())
-                response.headers.set('Content-Type', 'image/png')
-                response.headers.set('X-Prediction-Data', json.dumps(response_data))
-                return response
-
-            except Exception as e:
-                return jsonify({"error": f"Heatmap generation failed: {str(e)}"}), 500
-
         store_prediction(
             patient_id=response_data["patient_id"],
             prediction_prob=float(predicted_prob),
             prediction_class=predicted_class,
             verdict=verdict,
             ehr_data=ehr_dict,
-            explanation_url=None,
-            query_answer=None,
-            heatmap_path=None,
-            validation_status="Not validated"
+            explanation_url="",  # Or just remove this column from schema
+            query_answer="",
+            heatmap_path="",
+            validation_status="valid"
         )
 
         return jsonify(response_data)
 
     except Exception as e:
-        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/get_predictions', methods=['GET'])
 def get_predictions():
