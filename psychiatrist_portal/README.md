@@ -1,46 +1,6 @@
-# Getting Started with Create React App
+#  Psychiatric Care: Drug Abuse Detection Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-# 🧠 PsyProtection: Drug Abuse Detection Platform
-
-This is a multimodal diagnostic tool for detecting potential drug abuse based on MRI and EHR data. The system consists of a React frontend and Flask-based backend with multiple services.
+Psychiatric Care is a diagnostic platform that uses MRI and Eelectornic health Record data to predict potential drug abuse. The system includes a React-based frontend and multiple Flask APIs for prediction, explanation, and RAG-based treatment recommendation.
 
 ---
 
@@ -48,10 +8,12 @@ This is a multimodal diagnostic tool for detecting potential drug abuse based on
 
 ```
 psyprotection/
-├── psychiatrist-portal/         # Frontend (React)
-├── api_predict/                 # Flask backend (port 5000)
-├── api_heatmap/                 # Flask XAI service (port 5001)
-├── orchestrator/                # Entry Endpoint Processor (port 9000)
+├── psychiatrist-portal/       # React frontend
+├── backend/
+│   ├── drug_abuse_detector.api  # Prediction API (port 5000)
+│   ├── xai_api.py              # Heatmap Explanation API (port 5001)
+│   ├── rag_api.py              # RAG Treatment API (port 8000)
+│   └── eep_server.py           # Orchestrator / EEP API (port 9000)
 ```
 
 ---
@@ -71,7 +33,7 @@ psyprotection/
 
 ## 🚀 Getting Started
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/PsyProtection.git
@@ -88,61 +50,96 @@ npm install
 npm start
 ```
 
-The app will start at: [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-### 3. Run the Backend APIs
+### 3. Run the Flask Backends
 
-> Open **three terminals** (or split terminals in VS Code):
+> Open **four terminals** (or use split terminal tabs):
 
 #### a) Prediction API (port 5000)
 
 ```bash
-cd api_predict
+cd backend
 pip install -r requirements.txt
-python api_predict.py
+python drug_abuse_detector.api
 ```
 
 #### b) Explanation API (port 5001)
 
 ```bash
-cd api_heatmap
-pip install -r requirements.txt
-python api_heatmap.py
+cd backend
+python xai_api.py
 ```
 
-#### c) Orchestrator API (port 9000)
+#### c) RAG API (port 8000)
 
 ```bash
-cd orchestrator
-pip install -r requirements.txt
-python orchestrator.py
+cd backend
+python rag_api.py
+```
+
+#### d) Orchestrator / EEP (port 9000)
+
+```bash
+cd backend
+python eep_server.py
 ```
 
 ---
 
 ## 🧪 Usage
 
-1. Fill out the patient EHR form in the UI.
-2. Upload a `.nii` or `.nii.gz` MRI file.
-3. Submit the form.
-4. If the result is **"Drug Abuser"**, a heatmap explanation is displayed.
-5. A treatment recommendation is shown using biomedical RAG.
+1. In the browser UI, fill out the patient EHR form.
+2. Upload a `.nii` or `.nii.gz` MRI scan.
+3. Click **Submit**.
+4. If prediction is **Drug Abuser**, a heatmap will be generated.
+5. RAG will fetch biomedical context and suggest a treatment.
 
 ---
 
-## 🛠️ Ignore These in Git
+## 🛠️ Development Notes
 
-Add the following to your `.gitignore`:
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+You can use the following scripts inside the `psychiatrist-portal` directory:
+
+### Start Frontend
+
+```bash
+npm start
+```
+
+### Run Tests
+
+```bash
+npm test
+```
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+---
+
+## 📄 .gitignore Suggestions
+
+Make sure your `.gitignore` includes:
 
 ```
 node_modules/
 __pycache__/
-.env
 *.nii
 *.nii.gz
 *.pt
 venv/
+.env
+build/
 ```
 
+## 🪪 License
+
+MIT — free to use, modify, and distribute.
