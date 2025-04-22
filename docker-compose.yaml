@@ -4,7 +4,7 @@ services:
   portal:
     image: careful:latest
     ports:
-      - "3000:80"  
+      - "3000:80"
     restart: always
     depends_on:
       - eep_server
@@ -36,7 +36,10 @@ services:
     restart: always
 
   rag_server:
-    image: psyprotectionregistry.azurecr.io/psyrag:latest
+    image: psyrag:production
     ports:
-      - "8000:8000"
+      - "${RAG_PORT}:8000"
     restart: always
+    environment:
+      - openai_api_key=${OPENAI_API_KEY}
+      - entrez_email=${ENTREZ_EMAIL}
