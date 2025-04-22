@@ -60,3 +60,65 @@ This project utilizes the following datasets:
 
 ## Setup Instructions
 Please follow the instructions as they are to get a proper setup
+# 🚀 Deployment Instructions (Azure-based)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+---
+
+### 2. Login to Azure and Azure Container Registry (ACR)
+
+```bash
+az login
+az acr login --name <your-acr-name>
+```
+
+> 📝 Replace `<your-acr-name>` with your actual Azure Container Registry name (e.g., `myregistry`).
+
+---
+
+### 3. Pull Docker Images from ACR
+
+```bash
+docker pull <your-acr-name>.azurecr.io/<your-image-name>:<tag>
+```
+
+**Example:**
+
+```bash
+docker pull myregistry.azurecr.io/drug-detector-api:latest
+```
+
+> Repeat for each service image your project uses.
+
+---
+
+### 4. Run the Containers
+
+```bash
+docker run -d -p 5000:5000 myregistry.azurecr.io/drug-detector-api:latest
+```
+
+> 📌 Adjust the ports (`-p host:container`) depending on the service (e.g., `5000` for API, `5001` for heatmap, etc.)
+
+You can also use `--env` or `--env-file` for any required environment variables:
+
+```bash
+docker run -d -p 9000:9000 --env-file .env myregistry.azurecr.io/eep-server:latest
+```
+
+---
+
+### 5. Verify Services
+
+Visit the relevant URLs to check if services are up and running:
+
+- `http://<your-vm-ip>:5000` — Prediction API  
+- `http://<your-vm-ip>:5001/explain` — Heatmap API  
+- `http://<your-vm-ip>:9000` — EEP entrypoint  
+- `http://<your-vm-ip>:3000` — UI Portal
