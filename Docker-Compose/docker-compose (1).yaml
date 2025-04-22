@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  portal:
+    image: careful:latest
+    ports:
+      - "3000:80"
+    restart: always
+    depends_on:
+      - eep_server
+
+  eep_server:
+    image: endpoint:latest
+    ports:
+      - "9000:9000"
+    restart: always
+    depends_on:
+      - drug_detector
+      - xai
+      - rag_server
+    environment:
+      - DRUG_DETECTOR_URL=http://drug_detector:5000
+      - XAI_URL=http://xai:5001
+      - RAG_URL=http://rag_server:8000
+
+  services:
+  drug_detector:
+    image: ${ACR_SERVER}/detector:latest  # Now uses ACR path
+    ports:
+      - "5000:5000"
+    restart: always
+    credentials:
+      username: ${ACR_USERNAME}
+      password: ${ACR_PASSWORD}
+
+  xai:
+    image: ${ACR_SERVER}/xai:latest  
+    ports:
+      - "5001:5001"
+    restart: always
+    credentials:
+      username: ${ACR_USERNAME}
+      password: ${ACR_PASSWORD}
+
+  rag_server:
+    image: psyrag:production
+    ports:
+      - "${RAG_PORT}:8000"
+    restart: always
+    environment:
+      - openai_api_key=${OPENAI_API_KEY}
+      - entrez_email=${ENTREZ_EMAIL}
