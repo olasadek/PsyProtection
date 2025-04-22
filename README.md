@@ -2,7 +2,6 @@
 
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines
 
-<img src="frontend/images/symptom_disease_icon.png" alt="Symptom Disease Icon" width="200" height="170" />
 
 ## Table of Contents
 
@@ -10,10 +9,6 @@ A web portal to help assist the dependency of psychiatric patients on their pers
 - [Datasets](#datasets)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
-  - [Prerequisites](#prerequisites)
-  - [Configuration and Running](#configuration-and-running)
-- [Meet the Team](#meet-the-team)
-- [Acknowledgements](#acknowledgements)
 
 ## Features
 
