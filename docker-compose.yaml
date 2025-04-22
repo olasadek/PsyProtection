@@ -2,15 +2,15 @@ version: '3.8'
 
 services:
   portal:
-    image: psyprotectionregistry.azurecr.io/portal:staging
+    image: careful:latest
     ports:
-      - "3000:80"  # Updated mapping: host 3000 -> container 80 (Nginx)
+      - "3000:80"  
     restart: always
     depends_on:
       - eep_server
 
   eep_server:
-    image: psyprotectionregistry.azurecr.io/eep_server:prod
+    image: endpoint:latest
     ports:
       - "9000:9000"
     restart: always
@@ -24,19 +24,19 @@ services:
       - RAG_URL=http://rag_server:8000
 
   drug_detector:
-    image: abuse1.azurecr.io/multimodal-drug-detector:latest
+    image: detector:latest
     ports:
       - "5000:5000"
     restart: always
 
   xai:
-    image: abuse.azurecr.io/xai:latest
+    image: xai:latest
     ports:
       - "5001:5001"
     restart: always
 
   rag_server:
-    image: psyprotectionregistry.azurecr.io/rag.py:production
+    image: psyprotectionregistry.azurecr.io/psyrag:latest
     ports:
       - "8000:8000"
     restart: always
