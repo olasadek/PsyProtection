@@ -23,17 +23,24 @@ services:
       - XAI_URL=http://xai:5001
       - RAG_URL=http://rag_server:8000
 
+  services:
   drug_detector:
-    image: detector:latest
+    image: ${ACR_SERVER}/detector:latest  # Now uses ACR path
     ports:
       - "5000:5000"
     restart: always
+    credentials:
+      username: ${ACR_USERNAME}
+      password: ${ACR_PASSWORD}
 
   xai:
-    image: xai:latest
+    image: ${ACR_SERVER}/xai:latest  
     ports:
       - "5001:5001"
     restart: always
+    credentials:
+      username: ${ACR_USERNAME}
+      password: ${ACR_PASSWORD}
 
   rag_server:
     image: psyrag:production
