@@ -11,6 +11,8 @@ This is an intelligent research retrieval system tailored for psychiatric and dr
 - 🌐 **Flask API for local or containerized deployment**
 
 ## 📦 Requirements
+your open api key
+your entrez email
 
 Install dependencies:
 
