@@ -4,24 +4,16 @@ services:
   portal:
     image: careful:latest
     ports:
-      - "3000:80"
-    deploy:
-      replicas: 1
-    restart_policy:
-      condition: on-failure
+      - "3000:80"  
+    restart: always
     depends_on:
       - eep_server
-    networks:
-      - default
 
   eep_server:
     image: endpoint:latest
     ports:
       - "9000:9000"
-    deploy:
-      replicas: 1
-    restart_policy:
-      condition: on-failure
+    restart: always
     depends_on:
       - drug_detector
       - xai
@@ -30,51 +22,21 @@ services:
       - DRUG_DETECTOR_URL=http://drug_detector:5000
       - XAI_URL=http://xai:5001
       - RAG_URL=http://rag_server:8000
-    networks:
-      - default
 
   drug_detector:
     image: detector:latest
     ports:
       - "5000:5000"
-    deploy:
-      replicas: 1
-    restart_policy:
-      condition: on-failure
-    networks:
-      - default
+    restart: always
 
   xai:
     image: xai:latest
     ports:
       - "5001:5001"
-    deploy:
-      replicas: 1
-    restart_policy:
-      condition: on-failure
-    networks:
-      - default
+    restart: always
 
   rag_server:
     image: psyprotectionregistry.azurecr.io/psyrag:latest
     ports:
       - "8000:8000"
-    deploy:
-      replicas: 1
-    restart_policy:
-      condition: on-failure
-    secrets:
-      - openai_api_key
-      - entrez_email
-    networks:
-      - default
-
-networks:
-  default:
-    driver: overlay
-
-secrets:
-  openai_api_key:
-    external: true
-  entrez_email:
-    external: true
+    restart: always
