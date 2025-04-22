@@ -2,6 +2,9 @@
 
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines
 
+# The google Drive for all needed Data and models weights : 
+https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
+
 
 ## Table of Contents
 
