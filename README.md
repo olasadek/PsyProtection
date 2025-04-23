@@ -63,6 +63,10 @@ This project utilizes the following datasets:
 ## Setup Instructions
 Please follow the instructions as they are to get a proper setup
 # 🚀 Deployment Instructions (Azure-based)
+Requires:
+Open AI api key
+Entrez email
+azure servers names and passwords
 
 ### 1. Clone the Repository
 
@@ -92,7 +96,7 @@ docker pull <your-acr-name>.azurecr.io/<your-image-name>:<tag>
 **Example:**
 
 ```bash
-docker pull myregistry.azurecr.io/drug-detector-api:latest
+docker pull myregistry.azurecr.io/abuse-drug-detector-api:latest
 ```
 
 > Repeat for each service image your project uses.
@@ -119,7 +123,40 @@ docker run -d -p 9000:9000 --env-file .env myregistry.azurecr.io/eep-server:late
 
 Visit the relevant URLs to check if services are up and running:
 
-- `http://<your-vm-ip>:5000` — Prediction API  
+- `http://<your-vm-ip>:5000/drug_abuse_detector` — Prediction API  
 - `http://<your-vm-ip>:5001/explain` — Heatmap API  
-- `http://<your-vm-ip>:9000` — EEP entrypoint  
+- `http://<your-vm-ip>:9000/analyze_patient` — EEP entrypoint  
 - `http://<your-vm-ip>:3000` — UI Portal
+- - `http://<your-vm-ip>:8000/ask_question` — Rag API
+## Additional if you wish to try it without the docker setup:
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/olasadek/PsyProtection.git
+cd PsyProtection
+```
+
+### 2. Have 5 terminals ready for this set up
+
+```bash
+python xai_api.py
+cd PsyProtection\multimodal-drug-detector
+```
+repeat for drug_abuse_detector_api.py // rag.py (don't forget to configure your environment in the environment file in the same folder // eep_server.py // xai_api.py . 
+KEEP THEM ALL RUNNING FOR THIS TO WORK
+
+### 3. Turn on the portal 
+
+for the last terminal 
+```bash
+npm start
+
+```
+you will be directed to local port 3000 where enginex usually runs. 
+Enter your data and analyze!
+
+## Happy analysis and may your patients be always safe !
+In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
+
+
