@@ -1,3 +1,4 @@
+<span style="background-color:yellow; padding: 2px 5px">Yellow Highlight</span>  
 # Psychiatric Care
 
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines
