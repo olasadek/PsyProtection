@@ -1,6 +1,4 @@
-![pink badge](https://img.shields.io/badge/Psychiatric-Care-ffc0cb)  
-# Psychiatric Care
-
+## ![pink badge](https://img.shields.io/badge/Psychiatric-Care-ffc0cb)  :
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines.
 
 
