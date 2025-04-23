@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  eep_server:
+    image: olasadek/endpoint:latest
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
