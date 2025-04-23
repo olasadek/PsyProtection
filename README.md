@@ -150,6 +150,9 @@ npm start
 you will be directed to local port 3000 where enginex usually runs. 
 Enter your data and analyze!
 
+### ATTENTION : don't worry if you do not have an openai api key, you can still go for a normal analysis and have a good explanation for the outcomes regardless.
+### you will just lose the recommendation priviliges
+
 ## Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
 
