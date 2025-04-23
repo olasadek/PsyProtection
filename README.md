@@ -38,7 +38,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 
 This project utilizes the following datasets:
 
-1. **Electronic health care and MRI Dataset**
+1. **Electronic health records and MRI Dataset**
    - **Description**: A wide collection of Brain MRI with the corresponding health data.
    - **Source**: OpenNeuro addiction dataset.
    - **Usage**: Used to train the multimodal prediction model.
@@ -57,7 +57,6 @@ This project utilizes the following datasets:
 - `dataset\`: Contains the datasets for prediction of drug dependency.
 - `psychiatrist_portal\`: Contains the frontend codes of the reactjs portal created.
 - `server\`: Contains the Flask server setup and setup for all the chains.
-- `uploads\`: Folder to contain received images and audios.
 - `Dockerfile`: For each code that needs dockerization, there is a dockerfile.
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
@@ -81,7 +80,6 @@ az login
 az acr login --name <your-acr-name>
 ```
 
-> 📝 Replace `<your-acr-name>` with your actual Azure Container Registry name (e.g., `myregistry`).
 
 ---
 
