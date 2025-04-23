@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+  drug_detector:
+    image: abuse1.azurecr.io/multimodal-drug-detector:latest
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
