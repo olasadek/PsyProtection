@@ -1,8 +1,7 @@
 import os
 
-def read_secret(path):
-    with open(path, "r") as f:
-        return f.read().strip()
+openai_api_key = os.environ.get("openai_api_key")
+entrez_email = os.environ.get("entrez_email")
 
-openai_api_key = read_secret("/run/secrets/openai_api_key")
-entrez_email = read_secret("/run/secrets/entrez_email")
+if not openai_api_key or not entrez_email:
+    raise ValueError("Missing environment variables: openai_api_key or entrez_email")
