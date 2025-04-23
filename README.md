@@ -1,7 +1,11 @@
 ![pink badge](https://img.shields.io/badge/welcome-here-ffc0cb)  
 # Psychiatric Care
 
-A web portal to help assist the dependency of psychiatric patients on their perscribed medicines
+A web portal to help assist the dependency of psychiatric patients on their perscribed medicines.
+
+
+![mental-health-banner-2200x1200](https://github.com/user-attachments/assets/d0084083-10b3-4125-bf09-a2e55117cc2f)
+
 
 # The google Drive for all needed Data and models weights : 
 https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
