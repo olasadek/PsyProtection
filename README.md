@@ -20,16 +20,16 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 
 ## Features
 
-- **Multimodal Model**: 
+- ![pink badge](https://img.shields.io/badge/Multimodal-model-ffc0cb): 
   - Processes **Eelectronic health record data** (Dense Neural Network) and **3D MRI volume images** (3D ViT).
   - Combines features using a **Late Fusion Classifier**.
   - **Training Accuracy**: 97%, **Testing Accuracy**: 87%.
 
-- **Explainable AI**:
+- ![pink badge](https://img.shields.io/badge/Explainable-AI-ffc0cb):
   - Generates a **heatmap** using occlusion-based Grad-CAM analysis to highlight important brain areas related to addiction risk.
   - Provides transparency by showing which parts of the MRI contribute to the modelâ€™s prediction.
 
-- **RAG System**:
+- ![pink badge](https://img.shields.io/badge/RAG-system-ffc0cb):
   - Retrieves research articles from **PMC** and **ArXiv** based on user queries.
   - Articles are chunked, embedded, and stored in a **vector database**.
   - Uses a **GPT model** to rewrite queries and generate answers based on the research.
