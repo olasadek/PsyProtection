@@ -9,12 +9,13 @@ A web portal to help assist the dependency of psychiatric patients on their pers
 https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
 
 
- ![pink badge](https://img.shields.io/badge/table-of-contents-ffc0cb)
+ ![pink badge](https://img.shields.io/badge/Contents-Table-ffc0cb)
 
 - [Features](#features)
 - [Datasets](#datasets)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
+- [Meet the team](#meet-the-team)
 
 
 ## Features
@@ -155,10 +156,10 @@ Enter your data and analyze!
 ### ATTENTION : don't worry if you do not have an openai api key, you can still go for a normal analysis and have a good explanation for the outcomes regardless.
 ### you will just lose the recommendation priviliges
 
-## Happy analysis and may your patients be always safe !
+# Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
-
-### Meet the team:
+![pink badge](https://img.shields.io/badge/The-team-ffc0cb)
+## Meet the team:
 Ola Sadek - masters student @ american university of beirut 
 Oussama Ibrahim - masters student @ american university of beirut
 
