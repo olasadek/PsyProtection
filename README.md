@@ -4,8 +4,8 @@ A web portal to help assist the dependency of psychiatric patients on their pers
 
 ![mental-health-banner-2200x1200](https://github.com/user-attachments/assets/d0084083-10b3-4125-bf09-a2e55117cc2f)
 
-(https://img.shields.io/badge/google-drive-ffc0cb)
-# The link for all needed Data and models weights : 
+
+# The ![pink badge](https://img.shields.io/badge/google-drive-ffc0cb) link for all needed Data and models weights : 
 https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
 
 
