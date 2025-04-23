@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  portal_server:
+    image: olasadek/careful:latest
+    ports:
+      - "3000:80"
+    restart: always
+
+  eep_server:
+    image: olasadek/endpoint:latest
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    environment:
+      - DRUG_DETECTOR_URL=http://drug_detector:5000  
+      - XAI_URL=http://xai:5001  
+      - RAG_SERVER_URL=http://rag_server:8000  
+    depends_on:
+      - drug_detector
+      - xai
+      - rag_server
+
+  drug_detector:
+    image: abuse1.azurecr.io/multimodal-drug-detector:latest
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  xai:
+    image: abuse.azurecr.io/xai:latest
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+
+  rag_server:
+    image: olasadek/psyrag:production
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      - openai_api_key=${OPENAI_API_KEY}
+      - entrez_email=${ENTREZ_EMAIL}
