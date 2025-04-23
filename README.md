@@ -90,16 +90,10 @@ az acr login --name <your-acr-name>
 ### 3. Pull Docker Images from ACR
 
 ```bash
-docker pull <your-acr-name>.azurecr.io/<your-image-name>:<tag>
+docker pull absue.azurecr.io/abuse-drug-detector-api:latest
 ```
 
-**Example:**
-
-```bash
-docker pull myregistry.azurecr.io/abuse-drug-detector-api:latest
-```
-
-> Repeat for each service image your project uses.
+> Repeat for each service image .
 
 ---
 
