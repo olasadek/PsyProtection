@@ -9,14 +9,13 @@ A web portal to help assist the dependency of psychiatric patients on their pers
 https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
 
 
- (https://img.shields.io/badge/Table-of-contents-ffc0cb)
+ ![pink badge](https://img.shields.io/badge/table-of-contents-ffc0cb)
 
 - [Features](#features)
 - [Datasets](#datasets)
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
 
-## Features
 
 ## Features
 
@@ -159,4 +158,7 @@ Enter your data and analyze!
 ## Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
 
+### Meet the team:
+Ola Sadek - masters student @ american university of beirut 
+Oussama Ibrahim - masters student @ american university of beirut
 
