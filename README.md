@@ -159,7 +159,7 @@ Enter your data and analyze!
 # Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
 ![pink badge](https://img.shields.io/badge/The-team-ffc0cb)
-## Meet the team:
+### Meet the team:
 Ola Sadek - masters student @ american university of beirut 
 Oussama Ibrahim - masters student @ american university of beirut
 
