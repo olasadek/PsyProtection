@@ -100,10 +100,10 @@ docker pull absue.azurecr.io/abuse-drug-detector-api:latest
 ### 4. Run the Containers
 
 ```bash
-docker run -d -p 5000:5000 myregistry.azurecr.io/drug-detector-api:latest
+docker run -d -p 5000:5000 absue.azurecr.io/abuse-drug-detector-api:latest
 ```
 
-> 📌 Adjust the ports (`-p host:container`) depending on the service (e.g., `5000` for API, `5001` for heatmap, etc.)
+> 📌 Adjust the ports (`-p host:container`) depending on the service (e.g., `5000` for /drug_abuse_detector, `5001` for XAI, etc.)
 
 You can also use `--env` or `--env-file` for any required environment variables:
 
