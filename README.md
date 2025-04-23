@@ -1,4 +1,4 @@
-<span style="background-color:yellow; padding: 2px 5px">Yellow Highlight</span>  
+![Banner](https://via.placeholder.com/1000x200/ffc0cb/000000?text=Welcome+to+My+Project)  
 # Psychiatric Care
 
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines
