@@ -63,9 +63,9 @@ This project utilizes the following datasets:
 - `Dockerfile`: For each code that needs dockerization, there is a dockerfile.
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
-## Setup Instructions
+## 🚀 Setup Instructions
 Please follow the instructions as they are to get a proper setup
-# 🚀 Deployment Instructions (Azure-based)
+
 Requires:
 Open AI api key
 Entrez email
@@ -124,7 +124,8 @@ Visit the relevant URLs to check if services are up and running:
 - `http://<your-vm-ip>:5001/explain` — Heatmap API  
 - `http://<your-vm-ip>:9000/analyze_patient` — EEP entrypoint  
 - `http://<your-vm-ip>:3000` — UI Portal
-- - `http://<your-vm-ip>:8000/ask_question` — Rag API
+- `http://<your-vm-ip>:8000/ask_question` — Rag API
+  
 ## Additional if you wish to try it without the docker setup:
 
 ### 1. Clone the Repository
@@ -158,6 +159,7 @@ Enter your data and analyze!
 
 # Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
+
 ![pink badge](https://img.shields.io/badge/The-team-ffc0cb)
 ### Meet the team:
 Ola Sadek - masters student @ american university of beirut 
