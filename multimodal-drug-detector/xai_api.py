@@ -13,17 +13,32 @@ import sqlite3
 from multimodal_model import MultiModalDiagnosticNet, ViTImageEncoder, EHRFeatureEncoder
 from flask_cors import CORS
 import base64
-from flask import send_file , Flask, request, jsonify, make_response
+from flask import send_file, Flask, request, jsonify, make_response
 import io
+import gdown  # Google Drive downloader
 
-BASE_DIR = r"C:\Users\your_directory"
-MODEL_PATH = os.path.join(BASE_DIR, "multi_modal_diagnostic_model.pkl")
-SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
-ENCODER_PATH = os.path.join(BASE_DIR, "encoder.pkl")
-STATIC_PATH = os.path.join(BASE_DIR, "static")
-DATABASE_PATH = os.path.join(BASE_DIR, "predictions.db")
+# Set up the Google Drive paths for model and data files
+CACHE_DIR = "model_cache"
+os.makedirs(CACHE_DIR, exist_ok=True)
 
-app = Flask(__name__, static_folder=STATIC_PATH)
+BASE_DIR = CACHE_DIR  # Directory for storing heatmaps and other generated files
+
+def download_if_missing(file_id, filename):
+    path = os.path.join(CACHE_DIR, filename)
+    if not os.path.exists(path):
+        print(f"Downloading {filename} from Google Drive...")
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, path, quiet=False)
+    return path
+
+# File downloads
+MODEL_PATH   = download_if_missing("1hrGd-m641Imceu86vLljXPlQWa7aXO00", "multi_modal_diagnostic_model.pkl")
+SCALER_PATH  = download_if_missing("1dUjpSyq3eXzP00QThmn94InR5XTO6XSJ", "scaler.pkl")
+ENCODER_PATH = download_if_missing("1eJ96Wp1d8M4Q1DWpzM0xLNc7-TOGGISP", "encoder.pkl")
+DATABASE_PATH = download_if_missing("1-FbV8JixOrZdzU_r8HAxFFymaAlB7VXk", "predictions.db")
+
+# App setup
+app = Flask(__name__)
 CORS(app)
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
 
@@ -143,10 +158,9 @@ def mri_occlusion_explain_internal(mri_data):
         heatmap = np.maximum(heatmap, 0)
         heatmap = heatmap / np.max(heatmap + 1e-8)
 
-        os.makedirs(STATIC_PATH, exist_ok=True)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         heatmap_filename = f"heatmap_{timestamp}.png"
-        heatmap_path = os.path.join(STATIC_PATH, heatmap_filename)
+        heatmap_path = os.path.join(CACHE_DIR, heatmap_filename)
 
         fig, ax = plt.subplots()
         ax.imshow(middle_slice, cmap='gray')
@@ -160,7 +174,7 @@ def mri_occlusion_explain_internal(mri_data):
         return {
             "explanation": "Occlusion-based explanation complete.",
             "base_prediction": base_pred,
-            "heatmap_url": f"/static/{heatmap_filename}",
+            "heatmap_url": heatmap_filename,
             "summary_file": heatmap_filename.replace(".png", "_summary.txt")
         }
 
@@ -236,7 +250,7 @@ def explain():
                 if "error" in explanation:
                     return jsonify({"error": f"Explanation failed: {explanation['error']}"}), 500
 
-                heatmap_path = os.path.join(STATIC_PATH, explanation['heatmap_url'].split('/static/')[-1])
+                heatmap_path = os.path.join(BASE_DIR, explanation['heatmap_url'])
 
                 store_prediction(
                     patient_id=request.form.get('patient_id', 'unknown'),
@@ -246,7 +260,7 @@ def explain():
                     ehr_data=ehr_dict,
                     explanation_url=explanation['heatmap_url'],
                     query_answer=None,
-                    heatmap_path=explanation['heatmap_url'].split('/static/')[-1],
+                    heatmap_path=explanation['heatmap_url'],
                     validation_status="Not validated"
                 )
 
@@ -265,6 +279,6 @@ def explain():
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    os.makedirs(STATIC_PATH, exist_ok=True)
+    os.makedirs(BASE_DIR, exist_ok=True)
     init_db()
     app.run(host='0.0.0.0', port=5001)
