@@ -5,7 +5,7 @@ A web portal to help assist the dependency of psychiatric patients on their pers
 ![mental-health-banner-2200x1200](https://github.com/user-attachments/assets/d0084083-10b3-4125-bf09-a2e55117cc2f)
 
 
-## The ![pink badge](https://img.shields.io/badge/google-drive-ffc0cb) link for all needed Data and models weights : 
+**The ![pink badge](https://img.shields.io/badge/google-drive-ffc0cb) link for all needed Data and models weights :**
 https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=drive_link
 
 
@@ -154,8 +154,8 @@ npm start
 you will be directed to local port 3000 where enginex usually runs. 
 Enter your data and analyze!
 
-## ATTENTION : don't worry if you do not have an openai api key, you can still go for a normal analysis and have a good explanation for the outcomes regardless.
-## you will just lose the recommendation priviliges
+**ATTENTION : don't worry if you do not have an openai api key, you can still go for a normal analysis and have a good explanation for the outcomes regardless.**
+**you will just lose the recommendation priviliges**
 
 # Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
