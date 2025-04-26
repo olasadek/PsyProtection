@@ -1,13 +1,11 @@
 from flask import Flask, request, jsonify, make_response
-import json
-import io
-import requests
+import json, io, requests, os
 
 app = Flask(__name__)
 
-PREDICTION_API_URL = "http://127.0.0.1:5000/drug_abuse_detector"
-RAG_API_URL = "http://127.0.0.1:8000/ask_question"
-EXPLANATION_API_URL = "http://127.0.0.1:5001/explain"
+PREDICTION_API_URL = "http://host.docker.internal:5000/drug_abuse_detector"
+RAG_API_URL = "http://host.docker.internal:8000/ask_question"
+EXPLANATION_API_URL = "http://host.docker.internal:5001/explain"
 
 @app.route('/analyze_patient', methods=['POST'])
 def analyze_patient():
@@ -65,7 +63,6 @@ def analyze_patient():
 @app.route('/explain', methods=['POST'])
 def analyze_with_explanation():
     try:
-        # --- Validate incoming data ---
         if 'file' not in request.files:
             return jsonify({"error": "No MRI file uploaded"}), 400
         if 'EHR_features' not in request.form:
@@ -80,11 +77,9 @@ def analyze_with_explanation():
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid EHR JSON format"}), 400
 
-        # Make a copy of the file stream for the explanation API
         file_copy = io.BytesIO(file.read())
-        file.seek(0)  # Rewind the original file
+        file.seek(0)
 
-        # --- Forward to Prediction API on port 5000 ---
         files = {'file': (file.filename, file.stream, file.content_type)}
         data = {
             'EHR_features': json.dumps(ehr_dict),
@@ -98,21 +93,14 @@ def analyze_with_explanation():
         prediction = pred_json.get("prediction", {})
         prediction_class = prediction.get("class", 0)
 
-        # --- If drug abuser, get explanation from port 5001 ---
-        heatmap_response = None
         if prediction_class == 1:
-            # Prepare data for explanation API
             files_explanation = {'file': (file.filename, file_copy, file.content_type)}
             data_explanation = {
                 'EHR_features': json.dumps(ehr_dict),
                 'patient_id': patient_id
             }
-            
-            # Get heatmap from explanation API
             expl_response = requests.post(EXPLANATION_API_URL, files=files_explanation, data=data_explanation)
-            
             if expl_response.status_code == 200:
-                # Create response with the raw image data
                 response = make_response(expl_response.content)
                 response.headers.set('Content-Type', 'image/png')
                 return response
