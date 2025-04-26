@@ -81,11 +81,14 @@ This project utilizes the following datasets:
 
 # 🚀 Setup Instructions
 Please follow the instructions as they are to get a proper setup
+
 ### 1. Clone the Repository 
 ```bash
 git clone https://github.com/olasadek/PsyProtection.git
 cd PsyProtection
 ```
+please never forget to change the environment file / configure file to match your api key and entrez email
+
 ## First choice with ![pink badge](https://img.shields.io/badge/via-kubernetes-ffc0cb)  :
 
 Requires:
