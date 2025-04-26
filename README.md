@@ -23,6 +23,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 - [The workflow](#workflow)
 - [Setup Instructions](#setup-instructions)
 - [CI/CD](#CI-CD)
+- [Unit testing](#unit_testing)
 - [Meet the team](#meet-the-team)
 - [Happy analysis!](#happy-analysis)
 
