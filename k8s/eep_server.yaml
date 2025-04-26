@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: eep-server
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: eep-server
@@ -13,12 +13,12 @@ spec:
         app: eep-server
     spec:
       containers:
-        - name: eep-server
+        - name: eep
           image: olasadek/eep_server:latest
           ports:
             - containerPort: 9000
           env:
-            - name: DRUG_DETECTOR_URL
+            - name: DRUG_DETECTOR_URL  # Internal services
               value: "http://drug-detector:5000"
             - name: XAI_URL
               value: "http://xai:5001"
@@ -30,7 +30,9 @@ kind: Service
 metadata:
   name: eep-server
 spec:
+  type: LoadBalancer  # Public endpoint
   ports:
     - port: 9000
+      targetPort: 9000
   selector:
     app: eep-server
