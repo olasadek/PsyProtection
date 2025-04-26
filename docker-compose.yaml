@@ -8,7 +8,7 @@ services:
     restart: always
 
   eep_server:
-    image: olasadek/endpoint:latest
+    image: olasadek/eep_server:latest
     ports:
       - "9000:9000"
     restart: unless-stopped
