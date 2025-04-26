@@ -18,7 +18,6 @@ spec:
           ports:
             - containerPort: 5000
 ---
-# drug_detector.yaml, xai.yaml, rag_server.yaml
 apiVersion: v1
 kind: Service
 metadata:
