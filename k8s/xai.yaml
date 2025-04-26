@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xai
+  template:
+    metadata:
+      labels:
+        app: xai
+    spec:
+      containers:
+        - name: xai
+          image: abuse.azurecr.io/xai:latest
+          ports:
+            - containerPort: 5001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xai
+spec:
+  ports:
+    - port: 5001
+  selector:
+    app: xai
