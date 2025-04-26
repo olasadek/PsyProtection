@@ -221,9 +221,8 @@ Enter your data and analyze!
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
 
 # **![pink badge](https://img.shields.io/badge/The-team-ffc0cb)**
- ## the team:
-**Ola Sadek - masters student @ american university of beirut.** 
-**Oussama Ibrahim - masters student @ american university of beirut.**
+### Ola Sadek - masters student @ american university of beirut.
+### Oussama Ibrahim - masters student @ american university of beirut.
 
 we would love to hear your feedback .
 
