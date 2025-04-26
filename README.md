@@ -1,5 +1,15 @@
 # **![pink badge](https://img.shields.io/badge/Psychiatric-Care-ffc0cb)**
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines.
+Knowing that over 30% of psychiatric patients, including those in psychwards, are heavily prone to becoming addicted to their prescribed medicines, 
+we have came with an assistant system solution to help monitor patients and to detect earlier-on their dependency on meds likelihood. 
+This project levarages  Brain RMI and EHR Data to build an AI-driven monitoring system that:
+-Predicts Addiction Risk
+-Self explains its outcomes.
+-Recommends personalized tapering plans.
+
+![image](https://github.com/user-attachments/assets/b7fdc1db-735c-459d-94a0-4867e37c2d91)
+
+
 
 
 ![mental-health-banner-2200x1200](https://github.com/user-attachments/assets/d0084083-10b3-4125-bf09-a2e55117cc2f)
@@ -28,7 +38,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 - ![pink badge](https://img.shields.io/badge/Explainable-AI-ffc0cb):
   - A sliding window with the model's weight gained from the fine tuned ViT model slides over the images to find abnormalities.
   - Generates a **heatmap** using occlusion-based Grad-CAM analysis to highlight important brain areas related to addiction risk.
-  - Provides transparency by showing which parts of the MRI contribute to the modelâ€™s prediction.
+  - Provides transparency by showing which parts of the MRI contribute to the model's prediction providing an extensive explanation of abnormailities in the brain.
 
 - ![pink badge](https://img.shields.io/badge/RAG-system-ffc0cb):
   - Retrieves research articles from **PMC** and **ArXiv** based on user queries.
