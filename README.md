@@ -21,11 +21,12 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 # The features
 
 - ![pink badge](https://img.shields.io/badge/Multimodal-model-ffc0cb): 
-  - Processes **Eelectronic health record data** (Dense Neural Network) and **3D MRI volume images** (3D ViT).
+  - Processes **Eelectronic health record data** (Dense Neural Network) and **3D MRI volume images** (3D Vision Transformers).
   - Combines features using a **Late Fusion Classifier**.
   - **Training Accuracy**: 97%, **Testing Accuracy**: 87%.
 
 - ![pink badge](https://img.shields.io/badge/Explainable-AI-ffc0cb):
+  - A sliding window with the model's weight gained from the fine tuned ViT model slides over the images to find abnormalities.
   - Generates a **heatmap** using occlusion-based Grad-CAM analysis to highlight important brain areas related to addiction risk.
   - Provides transparency by showing which parts of the MRI contribute to the modelâ€™s prediction.
 
@@ -34,7 +35,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
   - Articles are chunked, embedded, and stored in a **vector database**.
   - Uses a **GPT model** to rewrite queries and generate answers based on the research.
   - **Cached in TinyDB** for fast responses to repeated queries.
-** Automated Pipeline is implemented if the prediction of the patient is drug abuser where the explainable AI component will give back
+**Automated Pipeline is implemented if the prediction of the patient is drug abuser where the explainable AI component will give back
    a heatmap and a query will form using his medication and illness and thrown into the rag system for recommendation treatment**
 
 ## Datasets used:
