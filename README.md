@@ -37,19 +37,19 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 ** Automated Pipeline is implemented if the prediction of the patient is drug abuser where the explainable AI component will give back
    a heatmap and a query will form using his medication and illness and thrown into the rag system for recommendation treatment**
 
-## - ![pink badge](https://img.shields.io/badge/Datasets-used-ffc0cb)
+## Datasets used:
 
 This project utilizes the following datasets:
 
-1. **Electronic health records and MRI Dataset**
-   - **Description**: A wide collection of Brain MRI with the corresponding health data.
-   - **Source**: OpenNeuro addiction dataset.
-   - **Usage**: Used to train the multimodal prediction model.
+1.  ![pink badge](https://img.shields.io/badge/Text-Image-ffc0cb)
+   - Description: A wide collection of  3d-volume files of Brain MRI with the corresponding health data.
+   - Source: OpenNeuro addiction dataset.
+   - Usage: Used to train the multimodal prediction model.
 
-2. **Articles dataset**
-   - **Description**: Contains text data from articles .
-   - **Source**:  from both pubmed and arxiv via retrieval tools.
-   - **Usage**: Utilized for augmentation and answer generation for the rag system.
+2. ![pink badge](https://img.shields.io/badge/Image-data-ffc0cb)
+   - Description: Contains text data from articles .
+   - Source:  from both pubmed and arxiv via retrieval tools.
+   - Usage: Utilized for augmentation and answer generation for the rag system.
 
 ## Project Structure
 
@@ -59,7 +59,7 @@ This project utilizes the following datasets:
 - `multimodal-drug-detector\xai.py`: Contains the XAI component added to the predictions.
 - `dataset\`: Contains the datasets for prediction of drug dependency.
 - `psychiatrist_portal\`: Contains the frontend codes of the reactjs portal created.
-- `server\`: Contains the Flask server setup and setup for all the chains.
+- `k8`\: For running this project with kubernetes and the corresponding pods
 - `Dockerfile`: For each code that needs dockerization, there is a dockerfile.
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
