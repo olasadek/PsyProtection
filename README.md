@@ -218,11 +218,12 @@ Enter your data and analyze!
 **you will just lose the recommendation priviliges**
 
 # Outcome:
-you should be able to see a dashboard asking you for electronic health data and a brain mri file like this:
+### you should be able to see a dashboard asking you for electronic health data and a brain mri file like this:
 
 <img width="931" alt="preview" src="https://github.com/user-attachments/assets/d745cce1-ebd4-4263-a36a-566b14ca0688" />
 
-If you correctly inputed everything you should be getting a complete analysis of your corresponding patient : 
+### If you correctly inputed everything you should be getting a complete analysis of your corresponding patient : 
+
 ![Picture1](https://github.com/user-attachments/assets/9b241ada-36d5-4d78-9e2c-9777dba66970)
 
 
