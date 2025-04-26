@@ -243,7 +243,11 @@ Enter your data and analyze!
 
 # CI/CD pipeline:
 By using azure containers registry we assured the continuous integration and deployment and the monitoring of requests coming in dockerized containers.
+
 <img width="434" alt="Screenshot 2025-04-22 111821" src="https://github.com/user-attachments/assets/3497883d-d618-4a26-8147-39f16632c5b8" />
+
+# Unit testing:
+ every single part of this project has been subjected to UnitTest from local docker containers to azure deployed containers to docker-compose using Postman
 
 # Happy analysis and may your patients be always safe !
 In Hope of helping psychiatrists and psychwards better treat and monitor their patients.
