@@ -37,7 +37,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 ** Automated Pipeline is implemented if the prediction of the patient is drug abuser where the explainable AI component will give back
    a heatmap and a query will form using his medication and illness and thrown into the rag system for recommendation treatment**
 
-## Datasets
+## - ![pink badge](https://img.shields.io/badge/Datasets-used-ffc0cb)
 
 This project utilizes the following datasets:
 
