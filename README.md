@@ -2,10 +2,7 @@
 A web portal to help assist the dependency of psychiatric patients on their perscribed medicines.
 Knowing that over 30% of psychiatric patients, including those in psychwards, are heavily prone to becoming addicted to their prescribed medicines, 
 we have came with an assistant system solution to help monitor patients and to detect earlier-on their dependency on meds likelihood. 
-This project levarages bran MRI and electronic health data to build an AI-driven monitoring system that:
--Predicts Addiction Risk
--Self explains its outcomes.
--Recommends personalized tapering plans.
+This project levarages
 
 ![image](https://github.com/user-attachments/assets/b7fdc1db-735c-459d-94a0-4867e37c2d91)
 
