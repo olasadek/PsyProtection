@@ -29,4 +29,3 @@ spec:
       targetPort: [5000]
   selector:
     app: [drug-detector]
-    app: drug-detector
