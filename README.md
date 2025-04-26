@@ -65,19 +65,79 @@ This project utilizes the following datasets:
 
 ## 🚀 Setup Instructions
 Please follow the instructions as they are to get a proper setup
+### 1. Clone the Repository 
+```bash
+git clone https://github.com/olasadek/PsyProtection.git
+cd PsyProtection
+```
+## First choice with ![pink badge](https://img.shields.io/badge/via-kubernetes-ffc0cb)  :
 
 Requires:
 Open AI api key
 Entrez email
 azure servers names and passwords
+kubectl installed and configured
+Docker images already pushed to your registry
 
-### 1. Clone the Repository
 
+
+## 2. Deploy all services
 ```bash
-git clone https://github.com/olasadek/PsyProtection.git
-cd PsyProtection
+kubectl apply -f portal_server.yaml \
+              -f eep_server.yaml \
+              -f drug_detector.yaml \
+              -f xai.yaml \
+              -f rag_server.yaml
 ```
 
+## 3. Get access URLs (run in separate terminal)
+```bash
+minikube tunnel  # For Minikube users
+kubectl get svc portal-server eep-server -w
+```
+## 4. Deployment Commands
+```bash
+kubectl apply -f portal_server.yaml
+kubectl apply -f eep_server.yaml
+kubectl apply -f drug_detector.yaml
+kubectl apply -f xai.yaml
+kubectl apply -f rag_server.yaml
+# Verify deployment
+kubectl get pods -w
+```
+## 5. Access Your Application
+```bash
+kubectl get svc -w
+```
+## 6. Access URLs
+
+**Web Portal:** http://203.0.113.10:3000
+
+**EEP API:** http://203.0.113.11:9000 
+
+## 7. Shutdown when done.
+```bash
+kubectl delete -f portal_server.yaml
+kubectl delete -f eep_server.yaml
+kubectl delete -f drug_detector.yaml
+kubectl delete -f xai.yaml
+kubectl delete -f rag_server.yaml
+```
+
+## Second choice via ![pink badge](https://img.shields.io/badge/docker-compose-ffc0cb)
+Requires:
+Open AI api key
+Entrez email
+azure servers names and passwords
+
+
+### 1. Pull Docker Images from ACR
+
+```bash
+docker pull absue.azurecr.io/abuse-drug-detector-api:latest
+```
+
+> Repeat for each service image .
 ---
 
 ### 2. Login to Azure and Azure Container Registry (ACR)
@@ -126,7 +186,7 @@ Visit the relevant URLs to check if services are up and running:
 - `http://<your-vm-ip>:3000` — UI Portal
 - `http://<your-vm-ip>:8000/ask_question` — Rag API
   
-## Additional if you wish to try it without the docker setup:
+## Additional if you wish to try it without ![pink badge](https://img.shields.io/badge/using-docker-ffc0cb) if for some reason you wanted an easy run:
 
 ### 1. Clone the Repository
 
@@ -164,4 +224,6 @@ In Hope of helping psychiatrists and psychwards better treat and monitor their p
 ### Meet the team:
 Ola Sadek - masters student @ american university of beirut 
 Oussama Ibrahim - masters student @ american university of beirut
+
+we would love to hear your feedback .
 
