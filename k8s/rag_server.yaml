@@ -26,9 +26,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rag-server
+  name: service-name
 spec:
+  type: ClusterIP  # Default - no change needed
   ports:
-    - port: 8000
+    - port: [8000]
+      targetPort: [8000]
   selector:
-    app: rag-server
+    app: [rag-server]
