@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eep-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eep-server
+  template:
+    metadata:
+      labels:
+        app: eep-server
+    spec:
+      containers:
+        - name: eep-server
+          image: olasadek/eep_server:latest
+          ports:
+            - containerPort: 9000
+          env:
+            - name: DRUG_DETECTOR_URL
+              value: "http://drug-detector:5000"
+            - name: XAI_URL
+              value: "http://xai:5001"
+            - name: RAG_SERVER_URL
+              value: "http://rag-server:8000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eep-server
+spec:
+  ports:
+    - port: 9000
+  selector:
+    app: eep-server
