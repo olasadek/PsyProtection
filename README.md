@@ -18,8 +18,9 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
  # Content table: 
 
 - [Features](#features)
-- [Datasets](#datasets)
+- [Datasets used](#datasets_used)
 - [Project Structure](#project-structure)
+- [The workflow](#workflow)
 - [Setup Instructions](#setup-instructions)
 - [Meet the team](#meet-the-team)
 
@@ -44,7 +45,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 **Automated Pipeline is implemented if the prediction of the patient is drug abuser where the explainable AI component will give back
    a heatmap and a query will form using his medication and illness and thrown into the rag system for recommendation treatment**
 
-## Datasets used:
+# Datasets used:
 
 This project utilizes the following datasets:
 
@@ -58,7 +59,7 @@ This project utilizes the following datasets:
    - Source:  from both pubmed and arxiv via retrieval tools.
    - Usage: Utilized for augmentation and answer generation for the rag system.
 
-## Project Structure
+# Project Structure
 
 - `EEP\`: contains the eep server code that orchastrates the ports.
 - `rag.py\`: Contains the logic of the Rag system.
@@ -70,7 +71,12 @@ This project utilizes the following datasets:
 - `Dockerfile`: For each code that needs dockerization, there is a dockerfile.
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
-## 🚀 Setup Instructions
+
+# Workflow :
+
+![deepseek_mermaid_20250426_03bd15](https://github.com/user-attachments/assets/24f7395c-8def-43e7-9ef8-070475607d4c)
+
+# 🚀 Setup Instructions
 Please follow the instructions as they are to get a proper setup
 ### 1. Clone the Repository 
 ```bash
