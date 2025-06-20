@@ -31,7 +31,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 # The features
 
 - ![pink badge](https://img.shields.io/badge/Multimodal-model-ffc0cb): 
-  - Processes **Eelectronic health record data** (Dense Neural Network) and **3D MRI volume images** (3D Vision Transformers).
+  - Processes **Electronic health record data** (Dense Neural Network) and **3D MRI volume images** (3D Vision Transformers).
   - Combines features using a **Late Fusion Classifier**.
   - **Training Accuracy**: 97%, **Testing Accuracy**: 87%.
 
