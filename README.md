@@ -22,7 +22,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 - [Project Structure](#project-structure)
 - [The workflow](#the-workflow)
 - [Setup Instructions](#setup-instructions)
-- [CI/CD](#CI-CD)
+- [CI/CD](#CI/CD)
 - [Unit testing](#unit-testing)
 - [Meet the team](#meet-the-team)
 - [Happy analysis!](#happy-analysis)
@@ -75,11 +75,11 @@ This project utilizes the following datasets:
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
 
-# The workflow :
+# The workflow 
 
 ![deepseek_mermaid_20250426_03bd15](https://github.com/user-attachments/assets/24f7395c-8def-43e7-9ef8-070475607d4c)
 
-# 🚀 Setup Instructions
+#  Setup Instructions
 Please follow the instructions as they are to get a proper setup
 
 ### 1. Clone the Repository 
