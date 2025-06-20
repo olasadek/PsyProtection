@@ -22,7 +22,7 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 - [Project Structure](#project-structure)
 - [The workflow](#the-workflow)
 - [Setup Instructions](#setup-instructions)
-- [CI/CD](#CI/CD)
+- [CI CD](#CI/CD)
 - [Unit testing](#unit-testing)
 - [Meet the team](#meet-the-team)
 - [Happy analysis!](#happy-analysis)
@@ -245,7 +245,7 @@ Enter your data and analyze!
 
 ![Picture1](https://github.com/user-attachments/assets/9b241ada-36d5-4d78-9e2c-9777dba66970)
 
-# CI/CD pipeline:
+# CI/CD:
 By using azure containers registry we assured the continuous integration and deployment and the monitoring of requests coming in dockerized containers.
 
 <img width="434" alt="Screenshot 2025-04-22 111821" src="https://github.com/user-attachments/assets/3497883d-d618-4a26-8147-39f16632c5b8" />
