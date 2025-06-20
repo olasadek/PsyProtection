@@ -20,10 +20,10 @@ https://drive.google.com/drive/folders/1v8vINEB3Vt5aWw2HX6OdrRbH0fgPK2iP?usp=dri
 - [Features](#the-features)
 - [Datasets used](#datasets-used)
 - [Project Structure](#project-structure)
-- [The workflow](#workflow)
+- [The workflow](#the-workflow)
 - [Setup Instructions](#setup-instructions)
 - [CI/CD](#CI-CD)
-- [Unit testing](#unit_testing)
+- [Unit testing](#unit-testing)
 - [Meet the team](#meet-the-team)
 - [Happy analysis!](#happy-analysis)
 
@@ -75,7 +75,7 @@ This project utilizes the following datasets:
 - `requirements.txt`: Under each dockerized code there is a requirement text that goes with it .
 
 
-# Workflow :
+# The workflow :
 
 ![deepseek_mermaid_20250426_03bd15](https://github.com/user-attachments/assets/24f7395c-8def-43e7-9ef8-070475607d4c)
 
